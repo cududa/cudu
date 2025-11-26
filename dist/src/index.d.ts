@@ -154,6 +154,8 @@ export class Engine extends EventEmitter {
     vec3: typeof vec3;
     /** @internal */
     ndarray: any;
+    /** @internal */
+    skeletonUtils: typeof skeletonUtils;
     /**
      * Tick function, called by container module at a fixed timestep.
      * Clients should not normally need to call this manually.
@@ -257,3 +259,4 @@ import { Camera } from './lib/camera';
 import { TerrainMesher } from './lib/terrainMesher';
 import { ObjectMesher } from './lib/objectMesher';
 import * as vec3 from 'gl-vec3';
+import * as skeletonUtils from './lib/skeletonUtils';

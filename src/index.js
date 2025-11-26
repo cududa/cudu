@@ -25,6 +25,7 @@ import { Physics } from './lib/physics'
 import { World } from './lib/world'
 import { locationHasher } from './lib/util'
 import { makeProfileHook } from './lib/util'
+import * as skeletonUtils from './lib/skeletonUtils'
 
 
 import packageJSON from '../package.json'
@@ -313,6 +314,8 @@ export class Engine extends EventEmitter {
             this.vec3 = vec3
             /** @internal */
             this.ndarray = ndarray
+            /** @internal */
+            this.skeletonUtils = skeletonUtils
             // gameplay tweaks
             ents.getMovement(1).airJumps = 999
             // decorate window while making TS happy
@@ -321,6 +324,21 @@ export class Engine extends EventEmitter {
             win.vec3 = vec3
             win.ndarray = ndarray
             win.scene = this.rendering.scene
+            win.skeletonUtils = skeletonUtils
+        }
+
+        // Ensure a global hook exists for external debug pose tools (used by consumer games)
+        // Safe to initialize even outside debug mode; ignored if already set by the app.
+        if (typeof window !== 'undefined') {
+            var w = /** @type {any} */ (window)
+            if (!w.__animationDebugPose) {
+                w.__animationDebugPose = { enabled: false }
+            }
+            if (!w.getDebugPose) {
+                w.getDebugPose = function () {
+                    return w.__animationDebugPose
+                }
+            }
         }
 
         // add hooks to throw helpful errors when using deprecated methods
