@@ -1,9 +1,6 @@
 
 import * as vec3 from 'gl-vec3'
-
-import { Color3 } from '@babylonjs/core/Maths/math.color'
-import { CreateDisc } from '@babylonjs/core/Meshes/Builders/discBuilder'
-import '@babylonjs/core/Meshes/instancedMesh'
+import { Color3, CreateDisc } from 'babylonjs'
 
 
 /** @param {import('../index').Engine} noa  */

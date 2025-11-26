@@ -1,7 +1,7 @@
 
-import { TransformNode } from '@babylonjs/core/Meshes/transformNode'
+import { TransformNode } from 'babylonjs'
+import 'babylonjs' // thinInstanceMesh is included in UMD bundle
 import { makeProfileHook } from './util'
-import '@babylonjs/core/Meshes/thinInstanceMesh'
 
 
 var PROFILE = 0

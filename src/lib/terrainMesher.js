@@ -1,7 +1,6 @@
 
 import ndarray from 'ndarray'
-import { Mesh } from '@babylonjs/core/Meshes/mesh'
-import { VertexData } from '@babylonjs/core/Meshes/mesh.vertexData'
+import { Mesh, VertexData } from 'babylonjs'
 import { TerrainMatManager } from './terrainMaterials'
 import { makeProfileHook } from './util'
 

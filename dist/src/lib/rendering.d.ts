@@ -58,7 +58,7 @@ export class Rendering {
     /** @internal */
     _cameraHolder: TransformNode;
     /** @internal */
-    _camScreen: import("@babylonjs/core/Meshes").Mesh;
+    _camScreen: import("babylonjs").Mesh;
     /** @internal */
     _camScreenMat: StandardMaterial;
     /** @internal */
@@ -88,10 +88,10 @@ export class Rendering {
      * Use this to toggle the visibility of a mesh without disposing it or
      * removing it from the scene.
      *
-     * @param {import('@babylonjs/core/Meshes').Mesh} mesh
+     * @param {import('babylonjs').Mesh} mesh
      * @param {boolean} visible
      */
-    setMeshVisibility(mesh: import("@babylonjs/core/Meshes").Mesh, visible?: boolean): void;
+    setMeshVisibility(mesh: import("babylonjs").Mesh, visible?: boolean): void;
     /**
      * Create a default standardMaterial:
      * flat, nonspecular, fully reflects diffuse and ambient light
@@ -109,10 +109,10 @@ export class Rendering {
     /** @internal */
     debug_MeshCount(): void;
 }
-import { Engine } from '@babylonjs/core/Engines/engine';
-import { Scene } from '@babylonjs/core/scene';
-import { DirectionalLight } from '@babylonjs/core/Lights/directionalLight';
-import { FreeCamera } from '@babylonjs/core/Cameras/freeCamera';
+import { Engine } from 'babylonjs';
+import { Scene } from 'babylonjs';
+import { DirectionalLight } from 'babylonjs';
+import { FreeCamera } from 'babylonjs';
 import { SceneOctreeManager } from './sceneOctreeManager';
-import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
-import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
+import { TransformNode } from 'babylonjs';
+import { StandardMaterial } from 'babylonjs';

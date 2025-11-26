@@ -4,25 +4,29 @@ import { makeProfileHook } from './util'
 
 import { SceneOctreeManager } from './sceneOctreeManager'
 
+import {
+    Material,
+    Scene,
+    ScenePerformancePriority,
+    FreeCamera,
+    Engine,
+    DirectionalLight,
+    StandardMaterial,
+    Color3,
+    Color4,
+    Vector3,
+    TransformNode,
+    CreateLines,
+    CreatePlane,
+} from 'babylonjs'
+
 // Babylon 8 expects materials to expose needAlphaTestingForMesh; add a backward-compatible shim
-import { Material } from '@babylonjs/core/Materials/material'
 if (typeof Material.prototype.needAlphaTestingForMesh !== 'function') {
     Material.prototype.needAlphaTestingForMesh = function (mesh) {
         // @ts-ignore older materials expose needAlphaTesting
         return (typeof this.needAlphaTesting === 'function') ? this.needAlphaTesting() : false
     }
 }
-
-import { Scene, ScenePerformancePriority } from '@babylonjs/core/scene'
-import { FreeCamera } from '@babylonjs/core/Cameras/freeCamera'
-import { Engine } from '@babylonjs/core/Engines/engine'
-import { DirectionalLight } from '@babylonjs/core/Lights/directionalLight'
-import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial'
-import { Color3, Color4 } from '@babylonjs/core/Maths/math.color'
-import { Vector3 } from '@babylonjs/core/Maths/math.vector'
-import { TransformNode } from '@babylonjs/core/Meshes/transformNode'
-import { CreateLines } from '@babylonjs/core/Meshes/Builders/linesBuilder'
-import { CreatePlane } from '@babylonjs/core/Meshes/Builders/planeBuilder'
 
 
 
@@ -302,7 +306,7 @@ var addedToSceneFlag = 'noa_added_to_scene'
  * Use this to toggle the visibility of a mesh without disposing it or
  * removing it from the scene.
  * 
- * @param {import('@babylonjs/core/Meshes').Mesh} mesh
+ * @param {import('babylonjs').Mesh} mesh
  * @param {boolean} visible
  */
 Rendering.prototype.setMeshVisibility = function (mesh, visible = false) {

@@ -387,7 +387,7 @@ function BlockOptions(isFluid = false) {
     this.onCustomMeshCreate = null
 }
 
-/** @typedef {import('@babylonjs/core/Meshes').TransformNode} TransformNode */
+/** @typedef {import('babylonjs').TransformNode} TransformNode */
 
 
 /**
