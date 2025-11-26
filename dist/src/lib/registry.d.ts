@@ -75,8 +75,7 @@ export class Registry {
         renderMat: any;
         flowSpeed: number;
         flowDirection: number[];
-        flowWrapMin: number | null;
-        flowWrapMax: number | null;
+        flowPatternLength: number;
     };
     /**
      * Given a texture URL, does any material using that
@@ -181,16 +180,11 @@ declare class MaterialOptions {
      */
     flowDirection: number[];
     /**
-     * Minimum world-space coordinate for flow wrapping (along flow direction axis).
-     * If set along with flowWrapMax, the flow animation will wrap within these bounds.
-     * @type {number|null}
+     * Pattern length in blocks for repeating flow animations. The vertex offset
+     * will wrap every N blocks. Default is 10. Set this to match your prebaked
+     * texture/block pattern length for seamless wrapping.
+     * @type {number}
      */
-    flowWrapMin: number | null;
-    /**
-     * Maximum world-space coordinate for flow wrapping (along flow direction axis).
-     * If set along with flowWrapMin, the flow animation will wrap within these bounds.
-     * @type {number|null}
-     */
-    flowWrapMax: number | null;
+    flowPatternLength: number;
 }
 export {};

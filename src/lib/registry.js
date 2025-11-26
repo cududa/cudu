@@ -73,8 +73,7 @@ export class Registry {
          * @prop {*} renderMat
          * @prop {number} flowSpeed
          * @prop {number[]} flowDirection
-         * @prop {number|null} flowWrapMin
-         * @prop {number|null} flowWrapMax
+         * @prop {number} flowPatternLength
          */
         /** @type {MatDef[]} */
         var matDefs = []
@@ -205,8 +204,7 @@ export class Registry {
                 renderMat: opts.renderMaterial,
                 flowSpeed: opts.flowSpeed || 0,
                 flowDirection: opts.flowDirection || [1, 0, 0],
-                flowWrapMin: (opts.flowWrapMin !== undefined) ? opts.flowWrapMin : null,
-                flowWrapMax: (opts.flowWrapMax !== undefined) ? opts.flowWrapMax : null,
+                flowPatternLength: opts.flowPatternLength || 10,
             }
             return matID
         }
@@ -432,15 +430,10 @@ function MaterialOptions() {
      */
     this.flowDirection = [1, 0, 0]
     /**
-     * Minimum world-space coordinate for flow wrapping (along flow direction axis).
-     * If set along with flowWrapMax, the flow animation will wrap within these bounds.
-     * @type {number|null}
+     * Pattern length in blocks for repeating flow animations. The vertex offset
+     * will wrap every N blocks. Default is 10. Set this to match your prebaked
+     * texture/block pattern length for seamless wrapping.
+     * @type {number}
      */
-    this.flowWrapMin = null
-    /**
-     * Maximum world-space coordinate for flow wrapping (along flow direction axis).
-     * If set along with flowWrapMin, the flow animation will wrap within these bounds.
-     * @type {number|null}
-     */
-    this.flowWrapMax = null
+    this.flowPatternLength = 10
 }
