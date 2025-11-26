@@ -194,6 +194,42 @@ Rendering.prototype.getScene = function () {
     return this.scene
 }
 
+// Allow callers to tweak or disable the built-in directional light
+Rendering.prototype.setMainLightOptions = function (opts) {
+    if (!this.light) return
+    if (opts.direction) this.light.direction = opts.direction
+    if (opts.intensity !== undefined) this.light.intensity = opts.intensity
+    if (opts.diffuse) this.light.diffuse = opts.diffuse
+    if (opts.specular) this.light.specular = opts.specular
+}
+
+// Exclude specific meshes (and optionally descendants) from the main directional light
+Rendering.prototype.excludeMeshFromMainLight = function (mesh, includeDescendants = true) {
+    if (!this.light || !mesh) return
+    var targets = [mesh]
+    if (includeDescendants && typeof mesh.getChildMeshes === 'function') {
+        targets = targets.concat(mesh.getChildMeshes(false))
+    }
+    targets.forEach(m => {
+        if (this.light.excludedMeshes.indexOf(m) === -1) {
+            this.light.excludedMeshes.push(m)
+        }
+    })
+}
+
+// Re-include previously excluded meshes so they receive the main light again
+Rendering.prototype.includeMeshInMainLight = function (mesh, includeDescendants = true) {
+    if (!this.light || !mesh) return
+    var targets = [mesh]
+    if (includeDescendants && typeof mesh.getChildMeshes === 'function') {
+        targets = targets.concat(mesh.getChildMeshes(false))
+    }
+    targets.forEach(m => {
+        var idx = this.light.excludedMeshes.indexOf(m)
+        if (idx >= 0) this.light.excludedMeshes.splice(idx, 1)
+    })
+}
+
 // per-tick listener for rendering-related stuff
 /** @internal */
 Rendering.prototype.tick = function (dt) {

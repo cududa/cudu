@@ -65,6 +65,9 @@ export class Rendering {
     _camLocBlock: number;
     /** The Babylon `scene` object representing the game world. */
     getScene(): Scene;
+    setMainLightOptions(opts: any): void;
+    excludeMeshFromMainLight(mesh: any, includeDescendants?: boolean): void;
+    includeMeshInMainLight(mesh: any, includeDescendants?: boolean): void;
     /** @internal */
     tick(dt: any): void;
     /** @internal */
