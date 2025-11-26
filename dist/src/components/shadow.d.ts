@@ -1,5 +1,5 @@
 /** @param {import('../index').Engine} noa  */
-export default function _default(noa: import('../index').Engine, distance?: number): {
+export default function _default(noa: import("../index").Engine, distance?: number): {
     name: string;
     order: number;
     state: {

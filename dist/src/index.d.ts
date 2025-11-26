@@ -122,7 +122,7 @@ export class Engine extends EventEmitter {
      *      adjacent: number[],
      * }}
     */
-    targetedBlock: {
+    targetedBlock: null | {
         blockID: number;
         position: number[];
         normal: number[];
@@ -136,17 +136,17 @@ export class Engine extends EventEmitter {
     /** @internal */
     _targetedBlockDat: {
         blockID: number;
-        position: any;
-        normal: any;
-        adjacent: any;
+        position: number[];
+        normal: number[];
+        adjacent: number[];
     };
     /** @internal */
     _prevTargetHash: number;
     /** @internal */
-    _pickPos: any;
+    _pickPos: number[];
     /** @internal */
     _pickResult: {
-        _localPosition: any;
+        _localPosition: number[];
         position: number[];
         normal: number[];
     };
@@ -256,4 +256,4 @@ import { Entities } from './lib/entities';
 import { Camera } from './lib/camera';
 import { TerrainMesher } from './lib/terrainMesher';
 import { ObjectMesher } from './lib/objectMesher';
-import vec3 from 'gl-vec3';
+import * as vec3 from 'gl-vec3';

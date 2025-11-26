@@ -9,9 +9,9 @@ export function makeThroughputHook(_every: any, _title: any, filter: any): (stat
 export class ChunkStorage {
     hash: {};
     /** @returns {import('./chunk').Chunk} */
-    getChunkByIndexes(i?: number, j?: number, k?: number): import('./chunk').Chunk;
+    getChunkByIndexes(i?: number, j?: number, k?: number): import("./chunk").Chunk;
     /** @param {import('./chunk').Chunk} chunk */
-    storeChunkByIndexes(i: number, j: number, k: number, chunk: import('./chunk').Chunk): void;
+    storeChunkByIndexes(i: number, j: number, k: number, chunk: import("./chunk").Chunk): void;
     removeChunkByIndexes(i?: number, j?: number, k?: number): void;
 }
 /** @internal */

@@ -1,5 +1,5 @@
 
-import vec3 from 'gl-vec3'
+import * as vec3 from 'gl-vec3'
 import aabb from 'aabb-3d'
 import sweep from 'voxel-aabb-sweep'
 

@@ -16,7 +16,7 @@ export class Registry {
      * @internal
      * @param {import('../index').Engine} noa
     */
-    constructor(noa: import('../index').Engine, opts: any);
+    constructor(noa: import("../index").Engine, opts: any);
     /** @internal */
     noa: import("../index").Engine;
     /** @internal */
@@ -100,7 +100,7 @@ export class Registry {
     /** @internal */
     _matAtlasIndexLookup: number[];
 }
-export type TransformNode = import('@babylonjs/core/Meshes').TransformNode;
+export type TransformNode = import("@babylonjs/core/Meshes").TransformNode;
 /**
  * Default options when registering a block type
  */

@@ -1,5 +1,5 @@
 
-import glvec3 from 'gl-vec3'
+import * as glvec3 from 'gl-vec3'
 import { makeProfileHook } from './util'
 
 import { SceneOctreeManager } from './sceneOctreeManager'

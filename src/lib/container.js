@@ -46,17 +46,11 @@ export class Container extends EventEmitter {
         doCanvasBugfix(noa, this.canvas) // grumble...
 
 
-        /** Whether the browser supports pointerLock. @readonly */
-        this.supportsPointerLock = false
-
-        /** Whether the user's pointer is within the game area. @readonly */
-        this.pointerInGame = false
-
-        /** Whether the game is focused. @readonly */
-        this.isFocused = !!document.hasFocus()
-
-        /** Gets the current state of pointerLock. @readonly */
-        this.hasPointerLock = false
+        // internal backing fields for readonly accessors
+        this._supportsPointerLock = false
+        this._pointerInGame = false
+        this._isFocused = !!document.hasFocus()
+        this._hasPointerLock = false
 
 
 
@@ -78,11 +72,11 @@ export class Container extends EventEmitter {
 
         // shell listeners
         this._shell.onPointerLockChanged = (hasPL) => {
-            this.hasPointerLock = hasPL
+            this._hasPointerLock = hasPL
             this.emit((hasPL) ? 'gainedPointerLock' : 'lostPointerLock')
             // this works around a Firefox bug where no mouse-in event 
             // gets issued after starting pointerlock
-            if (hasPL) this.pointerInGame = true
+            if (hasPL) this._pointerInGame = true
         }
 
         // catch and relay domReady event
@@ -90,14 +84,14 @@ export class Container extends EventEmitter {
             this._shell.onResize = noa.rendering.resize.bind(noa.rendering)
             // listeners to track when game has focus / pointer
             detectPointerLock(this)
-            this.element.addEventListener('mouseenter', () => { this.pointerInGame = true })
-            this.element.addEventListener('mouseleave', () => { this.pointerInGame = false })
-            window.addEventListener('focus', () => { this.isFocused = true })
-            window.addEventListener('blur', () => { this.isFocused = false })
+            this.element.addEventListener('mouseenter', () => { this._pointerInGame = true })
+            this.element.addEventListener('mouseleave', () => { this._pointerInGame = false })
+            window.addEventListener('focus', () => { this._isFocused = true })
+            window.addEventListener('blur', () => { this._isFocused = false })
             // catch edge cases for initial states
             var onFirstMousedown = () => {
-                this.pointerInGame = true
-                this.isFocused = true
+                this._pointerInGame = true
+                this._isFocused = true
                 this.element.removeEventListener('mousedown', onFirstMousedown)
             }
             this.element.addEventListener('mousedown', onFirstMousedown)
@@ -107,6 +101,18 @@ export class Container extends EventEmitter {
             this._shell.onInit = null
         }
     }
+
+    /** Whether the browser supports pointerLock. @readonly */
+    get supportsPointerLock() { return this._supportsPointerLock }
+
+    /** Whether the user's pointer is within the game area. @readonly */
+    get pointerInGame() { return this._pointerInGame }
+
+    /** Whether the game is focused. @readonly */
+    get isFocused() { return this._isFocused }
+
+    /** Gets the current state of pointerLock. @readonly */
+    get hasPointerLock() { return this._hasPointerLock }
 
 
     /*
@@ -188,9 +194,9 @@ function detectPointerLock(self) {
         ('mozPointerLockElement' in document) ||
         ('webkitPointerLockElement' in document)
     if (lockElementExists) {
-        self.supportsPointerLock = true
+        self._supportsPointerLock = true
         var listener = function (e) {
-            self.supportsPointerLock = false
+            self._supportsPointerLock = false
             document.removeEventListener(e.type, listener)
         }
         document.addEventListener('touchmove', listener)

@@ -1,8 +1,8 @@
 /** @param {import('../index').Engine} noa */
-export function Chunk(noa: import('../index').Engine, requestID: any, ci: any, cj: any, ck: any, size: any, dataArray: any, fillVoxelID?: number): void;
+export function Chunk(noa: import("../index").Engine, requestID: any, ci: any, cj: any, ck: any, size: any, dataArray: any, fillVoxelID?: number): void;
 export class Chunk {
     /** @param {import('../index').Engine} noa */
-    constructor(noa: import('../index').Engine, requestID: any, ci: any, cj: any, ck: any, size: any, dataArray: any, fillVoxelID?: number);
+    constructor(noa: import("../index").Engine, requestID: any, ci: any, cj: any, ck: any, size: any, dataArray: any, fillVoxelID?: number);
     noa: import("../index").Engine;
     isDisposed: boolean;
     userData: any;

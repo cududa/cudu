@@ -24,6 +24,6 @@ export class Physics extends VoxelPhysics {
      * @internal
      * @param {import('../index').Engine} noa
     */
-    constructor(noa: import('../index').Engine, opts: any);
+    constructor(noa: import("../index").Engine, opts: any);
 }
 import { Physics as VoxelPhysics } from 'voxel-physics-engine';

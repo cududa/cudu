@@ -10,7 +10,7 @@
     "compilerOptions": {
         // output
         "outDir": "./dist",
-        "target": "es5",
+        "target": "es2021",
         "declaration": true,
         "emitDeclarationOnly": true,
         "rootDir": ".",
@@ -19,13 +19,15 @@
         "checkJs": true,
         "resolveJsonModule": true,
         "esModuleInterop": true,
+        "moduleResolution": "Node",
         "lib": [
             "DOM",
             "DOM.Iterable",
-            "ES2018"
+            "ES2021"
         ],
         "typeRoots": [
             "./types",
+            "./node_modules/@types"
         ],
         // "moduleResolution": "Node",
         // "downlevelIteration": true,

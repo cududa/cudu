@@ -29,7 +29,7 @@ export class MovementState {
  * to the entity's physics body.
  * @param {import('..').Engine} noa
 */
-export default function _default(noa: import('..').Engine): {
+export default function _default(noa: import("..").Engine): {
     name: string;
     order: number;
     state: MovementState;

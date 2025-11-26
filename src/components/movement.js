@@ -1,5 +1,5 @@
 
-import vec3 from 'gl-vec3'
+import * as vec3 from 'gl-vec3'
 
 
 
@@ -137,9 +137,9 @@ function applyMovementPhysics(dt, state, body) {
         // push vector to achieve desired speed & dir
         // following code to adjust 2D velocity to desired amount is patterned on Quake: 
         // https://github.com/id-Software/Quake-III-Arena/blob/master/code/game/bg_pmove.c#L275
-        vec3.subtract(push, m, body.velocity)
+        vec3.sub(push, m, body.velocity)
         push[1] = 0
-        var pushLen = vec3.length(push)
+        var pushLen = vec3.len(push)
         vec3.normalize(push, push)
 
         if (pushLen > 0) {

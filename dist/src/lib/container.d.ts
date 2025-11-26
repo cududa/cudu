@@ -19,20 +19,24 @@ export class Container extends EventEmitter {
      * @internal
      * @type {import('../index').Engine}
     */
-    noa: import('../index').Engine;
+    noa: import("../index").Engine;
     element: any;
     /** The `canvas` element that the game will draw into */
     canvas: any;
-    /** Whether the browser supports pointerLock. @readonly */
-    supportsPointerLock: boolean;
-    /** Whether the user's pointer is within the game area. @readonly */
-    pointerInGame: boolean;
-    /** Whether the game is focused. @readonly */
-    isFocused: boolean;
-    /** Gets the current state of pointerLock. @readonly */
-    hasPointerLock: boolean;
+    _supportsPointerLock: boolean;
+    _pointerInGame: boolean;
+    _isFocused: boolean;
+    _hasPointerLock: boolean;
     /** @internal */
     _shell: MicroGameShell;
+    /** Whether the browser supports pointerLock. @readonly */
+    readonly get supportsPointerLock(): boolean;
+    /** Whether the user's pointer is within the game area. @readonly */
+    readonly get pointerInGame(): boolean;
+    /** Whether the game is focused. @readonly */
+    readonly get isFocused(): boolean;
+    /** Gets the current state of pointerLock. @readonly */
+    readonly get hasPointerLock(): boolean;
     /** @internal */
     appendTo(htmlElement: any): void;
     /**

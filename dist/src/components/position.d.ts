@@ -7,7 +7,7 @@
  *  Local coords are relative to `noa.worldOriginOffset`.
  * @param {import('..').Engine} noa
 */
-export default function _default(noa: import('..').Engine): {
+export default function _default(noa: import("..").Engine): {
     name: string;
     order: number;
     state: PositionState;

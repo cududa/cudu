@@ -2,7 +2,7 @@
  * Physics component, stores an entity's physics engbody.
  * @param {import('..').Engine} noa
 */
-export default function _default(noa: import('..').Engine): {
+export default function _default(noa: import("..").Engine): {
     name: string;
     order: number;
     state: PhysicsState;
@@ -14,5 +14,5 @@ export default function _default(noa: import('..').Engine): {
 export function setPhysicsFromPosition(physState: any, posState: any): void;
 export class PhysicsState {
     /** @type {import('voxel-physics-engine').RigidBody} */
-    body: import('voxel-physics-engine').RigidBody;
+    body: import("voxel-physics-engine").RigidBody;
 }

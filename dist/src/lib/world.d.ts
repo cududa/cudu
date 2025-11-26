@@ -159,13 +159,17 @@ export class World extends EventEmitter {
     /** When manually controlling chunk loading, tells the engine that the
      * chunk containing the specified (x,y,z) needs to be created and loaded.
      * > Note: throws unless `noa.world.manuallyControlChunkLoading` is set.
-     * @param x, y, z
+     * @param {number} x
+     * @param {number} y
+     * @param {number} z
      */
     manuallyLoadChunk(x?: number, y?: number, z?: number): void;
     /** When manually controlling chunk loading, tells the engine that the
      * chunk containing the specified (x,y,z) needs to be unloaded and disposed.
      * > Note: throws unless `noa.world.manuallyControlChunkLoading` is set.
-     * @param x, y, z
+     * @param {number} x
+     * @param {number} y
+     * @param {number} z
      */
     manuallyUnloadChunk(x?: number, y?: number, z?: number): void;
     /** @internal */

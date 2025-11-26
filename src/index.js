@@ -9,7 +9,7 @@
 import './lib/shims'
 
 import { EventEmitter } from 'events'
-import vec3 from 'gl-vec3'
+import * as vec3 from 'gl-vec3'
 import ndarray from 'ndarray'
 import raycast from 'fast-voxel-raycast'
 
@@ -511,7 +511,7 @@ export class Engine extends EventEmitter {
             }
             return local
         } else {
-            return vec3.subtract(local, global, off)
+            return vec3.sub(local, global, off)
         }
     }
 
@@ -640,7 +640,8 @@ export class Engine extends EventEmitter {
 function checkWorldOffset(noa) {
     var lpos = noa.ents.getPositionData(noa.playerEntity)._localPosition
     var cutoff = noa._originRebaseDistance
-    if (vec3.sqrLen(lpos) < cutoff * cutoff) return
+    var lposLen2 = Number(vec3.sqrLen(lpos))
+    if (lposLen2 < cutoff * cutoff) return
     var delta = []
     for (var i = 0; i < 3; i++) {
         delta[i] = Math.floor(lpos[i])
@@ -666,7 +667,7 @@ function updateBlockTargets(noa) {
         // pick stops just shy of voxel boundary, so floored pos is the adjacent voxel
         vec3.floor(dat.adjacent, result.position)
         vec3.copy(dat.normal, result.normal)
-        vec3.subtract(dat.position, dat.adjacent, dat.normal)
+        vec3.sub(dat.position, dat.adjacent, dat.normal)
         dat.blockID = noa.world.getBlockID(dat.position[0], dat.position[1], dat.position[2])
         noa.targetedBlock = dat
         // arbitrary hash so we know when the targeted blockID/pos/face changes

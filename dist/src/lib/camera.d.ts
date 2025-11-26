@@ -21,7 +21,7 @@ export class Camera {
      * @param {import('../index').Engine} noa
      * @param {Partial.<CameraDefaults>} opts
     */
-    constructor(noa: import('../index').Engine, opts: Partial<CameraDefaults>);
+    constructor(noa: import("../index").Engine, opts: Partial<CameraDefaults>);
     noa: import("../index").Engine;
     /** Horizontal mouse sensitivity. Same scale as Overwatch (typical values around `5..10`) */
     sensitivityX: number;
@@ -91,11 +91,11 @@ export class Camera {
     */
     currentZoom: number;
     /** @internal */
-    _dirVector: any;
+    _dirVector: number[];
     /** @internal */
-    _localGetTargetPosition(): any;
+    _localGetTargetPosition(): number[];
     /** @internal */
-    _localGetPosition(): any;
+    _localGetPosition(): number[];
     /**
      * Returns the camera's current target position - i.e. the player's
      * eye position. When the camera is zoomed all the way in,
@@ -109,7 +109,7 @@ export class Camera {
     /**
      * Returns the camera direction vector (read only)
     */
-    getDirection(): any;
+    getDirection(): number[];
     /**
      * Called before render, if mouseLock etc. is applicable.
      * Applies current mouse x/y inputs to the camera angle and zoom

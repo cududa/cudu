@@ -24,7 +24,7 @@ export class Entities extends ECS {
      * @internal
      * @type {import('../index').Engine}
     */
-    noa: import('../index').Engine;
+    noa: import("../index").Engine;
     /** Hash containing the component names of built-in components.
      * @type {{ [key:string]: string }}
     */
@@ -81,7 +81,7 @@ export class Entities extends ECS {
      * Returns the entity's `movement` component state
      * @type {(id:number) => import('../components/movement').MovementState}
     */
-    getMovement: (id: number) => import('../components/movement').MovementState;
+    getMovement: (id: number) => import("../components/movement").MovementState;
     /**
      * Returns the entity's `collideTerrain` component state
      * @type {(id:number) => {callback: function}}

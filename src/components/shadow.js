@@ -1,5 +1,5 @@
 
-import vec3 from 'gl-vec3'
+import * as vec3 from 'gl-vec3'
 
 import { Color3 } from '@babylonjs/core/Maths/math.color'
 import { CreateDisc } from '@babylonjs/core/Meshes/Builders/discBuilder'
@@ -103,7 +103,8 @@ function updateShadowHeight(noa, posDat, physDat, mesh, size, shadowDist, camPos
     localY = Math.round(localY)
     vec3.copy(shadowPos, posDat._localPosition)
     shadowPos[1] = localY
-    var sqdist = vec3.squaredDistance(camPos, shadowPos)
+    // gl-vec3 typings return number[]; coerce for arithmetic
+    var sqdist = Number(vec3.sqrDist(camPos, shadowPos))
     // offset ~ 0.01 for nearby shadows, up to 0.1 at distance of ~40
     var offset = 0.01 + 0.1 * (sqdist / 1600)
     if (offset > 0.1) offset = 0.1

@@ -2,13 +2,13 @@
  * @internal
  * @param {import('../index').Engine} noa
 */
-export function ObjectMesher(noa: import('../index').Engine): void;
+export function ObjectMesher(noa: import("../index").Engine): void;
 export class ObjectMesher {
     /**
      * @internal
      * @param {import('../index').Engine} noa
     */
-    constructor(noa: import('../index').Engine);
+    constructor(noa: import("../index").Engine);
     rootNode: TransformNode;
     allBaseMeshes: any[];
     initChunk: (chunk: any) => void;

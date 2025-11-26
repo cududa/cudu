@@ -1,6 +1,6 @@
 
 import ECS from 'ent-comp'
-import vec3 from 'gl-vec3'
+import * as vec3 from 'gl-vec3'
 import { updatePositionExtents } from '../components/position'
 import { setPhysicsFromPosition } from '../components/physics'
 
@@ -252,7 +252,7 @@ export class Entities extends ECS {
             nudgePosition(locPos, 0, -hw, hw, state.__id)
             nudgePosition(locPos, 1, 0, state.height, state.__id)
             nudgePosition(locPos, 2, -hw, hw, state.__id)
-            vec3.subtract(locPos, locPos, delta)
+            vec3.sub(locPos, locPos, delta)
             this._updateDerivedPositionData(state.__id, state)
         }
     }
@@ -449,4 +449,3 @@ function extentsOverlap(extA, extB) {
     if (extA[5] < extB[2]) return false
     return true
 }
-

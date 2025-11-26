@@ -27,7 +27,7 @@ export class Rendering {
      * @internal
      * @param {import('../index').Engine} noa
     */
-    constructor(noa: import('../index').Engine, opts: any, canvas: any);
+    constructor(noa: import("../index").Engine, opts: any, canvas: any);
     /** @internal */
     noa: import("../index").Engine;
     /** Whether to redraw the screen when the game is resized while paused */
@@ -109,7 +109,7 @@ export class Rendering {
     /** @internal */
     debug_MeshCount(): void;
 }
-import { Engine as Engine_1 } from '@babylonjs/core/Engines/engine';
+import { Engine } from '@babylonjs/core/Engines/engine';
 import { Scene } from '@babylonjs/core/scene';
 import { DirectionalLight } from '@babylonjs/core/Lights/directionalLight';
 import { FreeCamera } from '@babylonjs/core/Cameras/freeCamera';

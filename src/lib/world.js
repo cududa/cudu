@@ -328,7 +328,9 @@ World.prototype.invalidateVoxelsInAABB = function (box) {
 /** When manually controlling chunk loading, tells the engine that the 
  * chunk containing the specified (x,y,z) needs to be created and loaded.
  * > Note: throws unless `noa.world.manuallyControlChunkLoading` is set.
- * @param x, y, z
+ * @param {number} x
+ * @param {number} y
+ * @param {number} z
  */
 World.prototype.manuallyLoadChunk = function (x = 0, y = 0, z = 0) {
     if (!this.manuallyControlChunkLoading) throw manualErr
@@ -340,7 +342,9 @@ World.prototype.manuallyLoadChunk = function (x = 0, y = 0, z = 0) {
 /** When manually controlling chunk loading, tells the engine that the 
  * chunk containing the specified (x,y,z) needs to be unloaded and disposed.
  * > Note: throws unless `noa.world.manuallyControlChunkLoading` is set.
- * @param x, y, z
+ * @param {number} x
+ * @param {number} y
+ * @param {number} z
  */
 World.prototype.manuallyUnloadChunk = function (x = 0, y = 0, z = 0) {
     if (!this.manuallyControlChunkLoading) throw manualErr
