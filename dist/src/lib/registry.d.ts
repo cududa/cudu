@@ -75,6 +75,8 @@ export class Registry {
         renderMat: any;
         flowSpeed: number;
         flowDirection: number[];
+        flowWrapMin: number | null;
+        flowWrapMax: number | null;
     };
     /**
      * Given a texture URL, does any material using that
@@ -178,5 +180,17 @@ declare class MaterialOptions {
      * @type {number[]}
      */
     flowDirection: number[];
+    /**
+     * Minimum world-space coordinate for flow wrapping (along flow direction axis).
+     * If set along with flowWrapMax, the flow animation will wrap within these bounds.
+     * @type {number|null}
+     */
+    flowWrapMin: number | null;
+    /**
+     * Maximum world-space coordinate for flow wrapping (along flow direction axis).
+     * If set along with flowWrapMin, the flow animation will wrap within these bounds.
+     * @type {number|null}
+     */
+    flowWrapMax: number | null;
 }
 export {};

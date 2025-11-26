@@ -73,6 +73,8 @@ export class Registry {
          * @prop {*} renderMat
          * @prop {number} flowSpeed
          * @prop {number[]} flowDirection
+         * @prop {number|null} flowWrapMin
+         * @prop {number|null} flowWrapMax
          */
         /** @type {MatDef[]} */
         var matDefs = []
@@ -203,6 +205,8 @@ export class Registry {
                 renderMat: opts.renderMaterial,
                 flowSpeed: opts.flowSpeed || 0,
                 flowDirection: opts.flowDirection || [1, 0, 0],
+                flowWrapMin: (opts.flowWrapMin !== undefined) ? opts.flowWrapMin : null,
+                flowWrapMax: (opts.flowWrapMax !== undefined) ? opts.flowWrapMax : null,
             }
             return matID
         }
@@ -427,4 +431,16 @@ function MaterialOptions() {
      * @type {number[]}
      */
     this.flowDirection = [1, 0, 0]
+    /**
+     * Minimum world-space coordinate for flow wrapping (along flow direction axis).
+     * If set along with flowWrapMax, the flow animation will wrap within these bounds.
+     * @type {number|null}
+     */
+    this.flowWrapMin = null
+    /**
+     * Maximum world-space coordinate for flow wrapping (along flow direction axis).
+     * If set along with flowWrapMin, the flow animation will wrap within these bounds.
+     * @type {number|null}
+     */
+    this.flowWrapMax = null
 }

@@ -146,7 +146,7 @@ function createTerrainMat(self, blockMatID = 0) {
 
         // add flow animation plugin if needed
         if (isAnimated) {
-            new FlowAnimationPlugin(plainMat, matInfo.flowSpeed, matInfo.flowDirection)
+            new FlowAnimationPlugin(plainMat, matInfo.flowSpeed, matInfo.flowDirection, matInfo.flowWrapMin, matInfo.flowWrapMax)
             // animated materials can't be frozen since uniforms update each frame
         } else {
             plainMat.freeze()
@@ -174,7 +174,7 @@ function createTerrainMat(self, blockMatID = 0) {
 
     // add flow animation plugin if needed
     if (isAnimated) {
-        new FlowAnimationPlugin(mat, matInfo.flowSpeed, matInfo.flowDirection)
+        new FlowAnimationPlugin(mat, matInfo.flowSpeed, matInfo.flowDirection, matInfo.flowWrapMin, matInfo.flowWrapMax)
         // animated materials can't be frozen since uniforms update each frame
     } else {
         mat.freeze()
@@ -284,11 +284,12 @@ class TerrainMaterialPlugin extends MaterialPluginBase {
 /**
  *
  *      Flow Animation Plugin - adds vertex offset for conveyor belt effect
+ *      Supports world-space wrapping when flowWrapMin/flowWrapMax are specified
  *
 */
 
 class FlowAnimationPlugin extends MaterialPluginBase {
-    constructor(material, flowSpeed, flowDirection) {
+    constructor(material, flowSpeed, flowDirection, flowWrapMin = null, flowWrapMax = null) {
         var priority = 100
         var defines = { 'NOA_FLOW_ANIMATION': false }
         super(material, 'FlowAnimationPlugin', priority, defines)
@@ -296,6 +297,9 @@ class FlowAnimationPlugin extends MaterialPluginBase {
 
         this._flowSpeed = flowSpeed
         this._flowDirection = flowDirection.slice() // copy array
+        this._flowWrapMin = flowWrapMin
+        this._flowWrapMax = flowWrapMax
+        this._flowWrapEnabled = (flowWrapMin !== null && flowWrapMax !== null) ? 1.0 : 0.0
         this._time = 0
 
         // hook into scene render loop to update time
@@ -321,6 +325,9 @@ class FlowAnimationPlugin extends MaterialPluginBase {
                 { name: 'flowTime', size: 1, type: 'float' },
                 { name: 'flowDirection', size: 3, type: 'vec3' },
                 { name: 'flowSpeed', size: 1, type: 'float' },
+                { name: 'flowWrapMin', size: 1, type: 'float' },
+                { name: 'flowWrapMax', size: 1, type: 'float' },
+                { name: 'flowWrapEnabled', size: 1, type: 'float' },
             ]
         }
     }
@@ -332,6 +339,9 @@ class FlowAnimationPlugin extends MaterialPluginBase {
             this._flowDirection[1],
             this._flowDirection[2])
         uniformBuffer.updateFloat('flowSpeed', this._flowSpeed)
+        uniformBuffer.updateFloat('flowWrapMin', this._flowWrapMin || 0.0)
+        uniformBuffer.updateFloat('flowWrapMax', this._flowWrapMax || 0.0)
+        uniformBuffer.updateFloat('flowWrapEnabled', this._flowWrapEnabled)
     }
 
     getCustomCode(shaderType) {
@@ -340,11 +350,36 @@ class FlowAnimationPlugin extends MaterialPluginBase {
                 uniform float flowTime;
                 uniform vec3 flowDirection;
                 uniform float flowSpeed;
+                uniform float flowWrapMin;
+                uniform float flowWrapMax;
+                uniform float flowWrapEnabled;
             `,
-            'CUSTOM_VERTEX_MAIN_BEGIN': `
-                // Apply flow offset with wrapping
-                float flowOffset = fract(flowTime * flowSpeed);
-                positionUpdated += flowDirection * flowOffset;
+            'CUSTOM_VERTEX_UPDATE_POSITION': `
+                // Calculate flow offset
+                float flowOffset = flowTime * flowSpeed;
+
+                if (flowWrapEnabled > 0.5) {
+                    // World-space wrapping mode
+                    // Get chunk world position from the world matrix
+                    vec3 chunkWorldPos = world[3].xyz;
+                    vec3 worldPos = chunkWorldPos + positionUpdated;
+
+                    // Apply flow offset
+                    worldPos += flowDirection * flowOffset;
+
+                    // Wrap Z axis within river bounds (assumes flow is in Z direction)
+                    float wrapRange = flowWrapMax - flowWrapMin;
+                    float z = worldPos.z;
+                    z = flowWrapMin + mod(z - flowWrapMin, wrapRange);
+                    worldPos.z = z;
+
+                    // Convert back to local space
+                    positionUpdated = worldPos - chunkWorldPos;
+                } else {
+                    // Simple mode - wrap within one block
+                    float simpleOffset = fract(flowOffset);
+                    positionUpdated += flowDirection * simpleOffset;
+                }
             `,
         }
         return null
