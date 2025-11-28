@@ -222,6 +222,8 @@ export class World extends EventEmitter {
     tick(): void;
     /** @internal */
     render(): void;
+    /** Dispose world resources and cancel pending async operations */
+    dispose(): void;
     /** @internal */
     _getChunkByCoords(x?: number, y?: number, z?: number): Chunk;
     _queueChunkForRemesh(chunk: any): void;

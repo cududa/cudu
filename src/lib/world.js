@@ -502,6 +502,39 @@ World.prototype.render = function () {
 }
 
 
+/** Dispose world resources and cancel pending async operations */
+World.prototype.dispose = function () {
+    // Cancel all pending async chunk requests
+    for (var [requestID, abortController] of this._asyncChunkAbortControllers) {
+        abortController.abort()
+    }
+    this._asyncChunkAbortControllers.clear()
+    this._asyncChunkPromises.clear()
+
+    // Clear all queues
+    this._chunksKnown.empty()
+    this._chunksToRequest.empty()
+    this._chunksInvalidated.empty()
+    this._chunksToRemove.empty()
+    this._chunksPending.empty()
+    this._chunksToMesh.empty()
+    this._chunksToMeshFirst.empty()
+
+    // Dispose all chunks
+    var hash = this._storage.hash
+    for (var key in hash) {
+        var chunk = hash[key]
+        if (chunk && typeof chunk.dispose === 'function') {
+            chunk.dispose()
+        }
+        delete hash[key]
+    }
+
+    this.removeAllListeners()
+    this.noa = null
+}
+
+
 /** @internal */
 World.prototype._getChunkByCoords = function (x = 0, y = 0, z = 0) {
     // let internal modules request a chunk object
@@ -832,9 +865,12 @@ function requestNewChunkAsync(world, requestID, dataArr, x, y, z, i, j, k, world
 
     var promise = world._asyncChunkGenerator(x, y, z, world._chunkSize, abortController.signal)
         .then(result => {
-            // Clean up tracking
-            world._asyncChunkAbortControllers.delete(requestID)
-            world._asyncChunkPromises.delete(requestID)
+            // Only clean up if this is still the active request for this chunk
+            // (prevents race where chunk removed & re-requested before promise resolves)
+            if (world._asyncChunkAbortControllers.get(requestID) === abortController) {
+                world._asyncChunkAbortControllers.delete(requestID)
+                world._asyncChunkPromises.delete(requestID)
+            }
 
             // Check if aborted or world changed
             if (abortController.signal.aborted) return
@@ -856,9 +892,11 @@ function requestNewChunkAsync(world, requestID, dataArr, x, y, z, i, j, k, world
             }
         })
         .catch(err => {
-            // Clean up tracking
-            world._asyncChunkAbortControllers.delete(requestID)
-            world._asyncChunkPromises.delete(requestID)
+            // Only clean up if this is still the active request for this chunk
+            if (world._asyncChunkAbortControllers.get(requestID) === abortController) {
+                world._asyncChunkAbortControllers.delete(requestID)
+                world._asyncChunkPromises.delete(requestID)
+            }
 
             // Don't log abort errors - they're expected
             if (err.name === 'AbortError') return

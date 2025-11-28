@@ -553,6 +553,9 @@ export class Engine extends EventEmitter {
         if (this.entities && typeof this.entities.dispose === 'function') {
             this.entities.dispose()
         }
+        if (this.world && typeof this.world.dispose === 'function') {
+            this.world.dispose()
+        }
 
         if (typeof window !== 'undefined') {
             var win = /** @type {any} */ (window)
