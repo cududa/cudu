@@ -1,4 +1,4 @@
-import { Quaternion, Vector3 } from 'babylonjs'
+import { Quaternion, Vector3 } from './babylonExports.js'
 
 /**
  * Apply a pre-rotation and an animation rotation on top of a bone's rest rotation.

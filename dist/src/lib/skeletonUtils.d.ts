@@ -12,4 +12,4 @@ export function qAxis(axis: any, angle: any): Quaternion;
  * side: 'left' | 'right'
  */
 export function shoulderPreRotation(side: any, down: any, out: any, rollIn: any, yawIn: any): Quaternion;
-import { Quaternion } from 'babylonjs';
+import { Quaternion } from './babylonExports.js';

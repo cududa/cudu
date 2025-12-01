@@ -18,4 +18,4 @@ export class ObjectMesher {
     tick: () => void;
     _rebaseOrigin: (delta: any) => void;
 }
-import { TransformNode } from 'babylonjs';
+import { TransformNode } from './babylonExports.js';

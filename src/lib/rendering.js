@@ -19,7 +19,7 @@ import {
     CreateLines,
     CreatePlane,
     Ray,
-} from 'babylonjs'
+} from './babylonExports.js'
 
 // Babylon 8 expects materials to expose needAlphaTestingForMesh; add a backward-compatible shim
 if (typeof Material.prototype.needAlphaTestingForMesh !== 'function') {
@@ -503,7 +503,7 @@ var addedToSceneFlag = 'noa_added_to_scene'
  * Use this to toggle the visibility of a mesh without disposing it or
  * removing it from the scene.
  * 
- * @param {import('babylonjs').Mesh} mesh
+ * @param {import('@babylonjs/core').Mesh} mesh
  * @param {boolean} visible
  */
 Rendering.prototype.setMeshVisibility = function (mesh, visible = false) {

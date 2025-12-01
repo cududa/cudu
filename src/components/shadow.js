@@ -1,6 +1,6 @@
 
 import * as vec3 from 'gl-vec3'
-import { Color3, CreateDisc } from 'babylonjs'
+import { Color3, CreateDisc } from '../lib/babylonExports.js'
 
 
 /** @param {import('../index').Engine} noa  */

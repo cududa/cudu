@@ -1,15 +1,25 @@
 {
     "name": "noa-engine",
     "version": "0.34.0",
+    "type": "module",
     "description": "Experimental voxel game engine",
-    "main": "src/index.js",
-    "typings": "dist/src/index.d.ts",
+    "main": "dist/noa.cjs.js",
+    "module": "dist/noa.esm.js",
+    "types": "dist/src/index.d.ts",
+    "exports": {
+        ".": {
+            "import": "./dist/noa.esm.js",
+            "require": "./dist/noa.cjs.js",
+            "types": "./dist/src/index.d.ts"
+        },
+        "./src/*": "./src/*"
+    },
     "files": [
         "/src",
         "/dist"
     ],
     "scripts": {
-        "build": "npm run types; npm run docs",
+        "build": "npm run bundle && npm run types && npm run docs",
         "types": "tsc",
         "docs": "typedoc"
     },
@@ -40,9 +50,11 @@
     },
     "devDependencies": {
         "babylonjs": "^8.0.0",
+        "@rollup/plugin-node-resolve": "^15.0.0",
         "@types/gl-vec3": "^1.1.4",
         "eslint": "^8.3.0",
         "js-beautify": "^1.14.0",
+        "rollup": "^4.0.0",
         "typedoc": "^0.28.14",
         "typedoc-plugin-missing-exports": "^4.1.2",
         "typescript": "^5.9.3"

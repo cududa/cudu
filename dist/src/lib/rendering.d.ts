@@ -72,7 +72,7 @@ export class Rendering {
     /** @internal */
     _cameraHolder: TransformNode;
     /** @internal */
-    _camScreen: import("babylonjs").Mesh;
+    _camScreen: import("@babylonjs/core").Mesh;
     /** @internal */
     _camScreenMat: StandardMaterial;
     /** @internal */
@@ -114,8 +114,8 @@ export class Rendering {
     _highlightMesh: any;
     /** @internal */
     resize(): void;
-    pickTerrainFromCamera(distance?: number): import("babylonjs").PickingInfo;
-    pickTerrainWithRay(origin: any, direction: any, distance?: number, originIsLocal?: boolean): import("babylonjs").PickingInfo;
+    pickTerrainFromCamera(distance?: number): import("@babylonjs/core").PickingInfo;
+    pickTerrainWithRay(origin: any, direction: any, distance?: number, originIsLocal?: boolean): import("@babylonjs/core").PickingInfo;
     /** @internal */
     highlightBlockFace(show: any, posArr: any, normArr: any): void;
     /**
@@ -131,10 +131,10 @@ export class Rendering {
      * Use this to toggle the visibility of a mesh without disposing it or
      * removing it from the scene.
      *
-     * @param {import('babylonjs').Mesh} mesh
+     * @param {import('@babylonjs/core').Mesh} mesh
      * @param {boolean} visible
      */
-    setMeshVisibility(mesh: import("babylonjs").Mesh, visible?: boolean): void;
+    setMeshVisibility(mesh: import("@babylonjs/core").Mesh, visible?: boolean): void;
     /**
      * Create a default standardMaterial:
      * flat, nonspecular, fully reflects diffuse and ambient light
@@ -152,12 +152,12 @@ export class Rendering {
     /** @internal */
     debug_MeshCount(): void;
 }
-import { Engine } from 'babylonjs';
-import { Scene } from 'babylonjs';
-import { DirectionalLight } from 'babylonjs';
-import { FreeCamera } from 'babylonjs';
+import { Engine } from './babylonExports.js';
+import { Scene } from './babylonExports.js';
+import { DirectionalLight } from './babylonExports.js';
+import { FreeCamera } from './babylonExports.js';
 import { SceneOctreeManager } from './sceneOctreeManager';
-import { TransformNode } from 'babylonjs';
-import { StandardMaterial } from 'babylonjs';
-import { Vector3 } from 'babylonjs';
-import { Ray } from 'babylonjs';
+import { TransformNode } from './babylonExports.js';
+import { StandardMaterial } from './babylonExports.js';
+import { Vector3 } from './babylonExports.js';
+import { Ray } from './babylonExports.js';

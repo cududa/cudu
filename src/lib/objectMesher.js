@@ -1,6 +1,6 @@
 
-import { TransformNode } from 'babylonjs'
-import 'babylonjs' // thinInstanceMesh is included in UMD bundle
+import { TransformNode } from './babylonExports.js'
+// Side-effect imports (thinInstanceMesh) are in babylonExports.js
 import { makeProfileHook } from './util'
 
 

@@ -1,5 +1,5 @@
 
-import { Engine, Texture, MaterialPluginBase, RawTexture2DArray } from 'babylonjs'
+import { Engine, Texture, MaterialPluginBase, RawTexture2DArray } from './babylonExports.js'
 
 /**
  * 

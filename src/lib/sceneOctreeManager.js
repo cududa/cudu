@@ -1,5 +1,5 @@
 
-import { Vector3, Octree, OctreeBlock, OctreeSceneComponent } from 'babylonjs'
+import { Vector3, Octree, OctreeBlock, OctreeSceneComponent } from './babylonExports.js'
 
 import { locationHasher, removeUnorderedListItem } from './util'
 

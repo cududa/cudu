@@ -103,7 +103,7 @@ export class Registry {
     /** @internal */
     _matAtlasIndexLookup: number[];
 }
-export type TransformNode = import("babylonjs").TransformNode;
+export type TransformNode = import("@babylonjs/core").TransformNode;
 /**
  * Default options when registering a block type
  */
@@ -144,7 +144,7 @@ declare class BlockOptions {
     /** @type {(mesh:TransformNode, x:number, y:number, z:number) => void} */
     onCustomMeshCreate: (mesh: TransformNode, x: number, y: number, z: number) => void;
 }
-/** @typedef {import('babylonjs').TransformNode} TransformNode */
+/** @typedef {import('@babylonjs/core').TransformNode} TransformNode */
 /**
  * Default options when registering a Block Material
  */
