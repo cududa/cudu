@@ -128,6 +128,17 @@ export class Rendering {
      */
     addMeshToScene(mesh: any, isStatic?: boolean, pos?: any, containingChunk?: any): void;
     /**
+     * Remove a mesh from noa's scene management without disposing it.
+     * Use this to temporarily remove a mesh or transfer it to different management.
+     * The mesh can be re-added later with addMeshToScene.
+     *
+     * Note: The onDisposeObservable handler added by addMeshToScene will remain,
+     * but it's safe - removeMesh is idempotent and the flag prevents double-processing.
+     *
+     * @param {import('@babylonjs/core').Mesh} mesh
+     */
+    removeMeshFromScene(mesh: import("@babylonjs/core").Mesh): void;
+    /**
      * Use this to toggle the visibility of a mesh without disposing it or
      * removing it from the scene.
      *

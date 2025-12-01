@@ -10715,6 +10715,23 @@ Rendering.prototype.addMeshToScene = function (mesh, isStatic = false, pos = nul
 var addedToSceneFlag = 'noa_added_to_scene';
 
 
+/**
+ * Remove a mesh from noa's scene management without disposing it.
+ * Use this to temporarily remove a mesh or transfer it to different management.
+ * The mesh can be re-added later with addMeshToScene.
+ *
+ * Note: The onDisposeObservable handler added by addMeshToScene will remain,
+ * but it's safe - removeMesh is idempotent and the flag prevents double-processing.
+ *
+ * @param {import('@babylonjs/core').Mesh} mesh
+ */
+Rendering.prototype.removeMeshFromScene = function (mesh) {
+    if (!mesh.metadata) return
+    if (!mesh.metadata[addedToSceneFlag]) return
+
+    this._octreeManager.removeMesh(mesh);
+    mesh.metadata[addedToSceneFlag] = false;
+};
 
 
 /**
