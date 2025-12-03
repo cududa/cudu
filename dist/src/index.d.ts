@@ -67,6 +67,7 @@ export class Engine extends EventEmitter {
     /**
      * Scale factor for voxel rendering.
      * A value of 0.8 makes each block render at 0.8x0.8x0.8 world units.
+     * This affects rendering, physics, raycasting, and coordinate conversions.
      * @type {number}
      */
     blockScale: number;

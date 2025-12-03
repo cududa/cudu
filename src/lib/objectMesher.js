@@ -79,9 +79,10 @@ export function ObjectMesher(noa) {
 
     // called by world when an object block is set or cleared
     this.setObjectBlock = function (chunk, blockID, i, j, k) {
-        var x = chunk.x + i
-        var y = chunk.y + j
-        var z = chunk.z + k
+        // Use voxel coordinates for key and handlers (not scaled world coords)
+        var x = chunk.i * chunk.size + i
+        var y = chunk.j * chunk.size + j
+        var z = chunk.k * chunk.size + k
         var key = `${x}:${y}:${z}`
 
         var oldID = chunk._objectBlocks[key] || 0

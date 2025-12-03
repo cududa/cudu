@@ -209,7 +209,11 @@ Chunk.prototype.set = function (i, j, k, newID) {
 function callBlockHandler(chunk, handlers, type, i, j, k) {
     var handler = handlers[type]
     if (!handler) return
-    handler(chunk.x + i, chunk.y + j, chunk.z + k)
+    // Pass voxel coordinates to handlers (not scaled world coords)
+    var voxelX = chunk.i * chunk.size + i
+    var voxelY = chunk.j * chunk.size + j
+    var voxelZ = chunk.k * chunk.size + k
+    handler(voxelX, voxelY, voxelZ)
 }
 
 

@@ -21,6 +21,10 @@ export class PhysicsState {
 
 export default function (noa) {
 
+    // Physics runs in "voxel space" (unscaled) for correct collision detection.
+    // Positions are converted to/from scaled world coords here.
+    var scale = noa.blockScale
+
     return {
 
         name: 'physics',
@@ -33,7 +37,7 @@ export default function (noa) {
             state.body = noa.physics.addBody()
             // implicitly assume body has a position component, to get size
             var posDat = noa.ents.getPositionData(state.__id)
-            setPhysicsFromPosition(state, posDat)
+            setPhysicsFromPosition(state, posDat, scale)
         },
 
 
@@ -43,8 +47,8 @@ export default function (noa) {
             // even if physics component is removed in collision handler
             if (noa.ents.hasPosition(state.__id)) {
                 var pdat = noa.ents.getPositionData(state.__id)
-                setPositionFromPhysics(state, pdat)
-                backtrackRenderPos(state, pdat, 0, false)
+                setPositionFromPhysics(state, pdat, scale)
+                backtrackRenderPos(state, pdat, 0, false, scale)
             }
             // Clear body callbacks before removal to prevent memory retention
             if (state.body) {
@@ -60,7 +64,7 @@ export default function (noa) {
                 var state = states[i]
                 var pdat = noa.ents.getPositionData(state.__id)
                 if (!pdat) continue // defensive check for mid-frame deletion
-                setPositionFromPhysics(state, pdat)
+                setPositionFromPhysics(state, pdat, scale)
             }
         },
 
@@ -86,7 +90,7 @@ export default function (noa) {
                 var pdat = noa.ents.getPositionData(id)
                 if (!pdat) continue // defensive check for mid-frame deletion
                 var smoothed = noa.ents.cameraSmoothed(id)
-                backtrackRenderPos(state, pdat, backtrackAmt, smoothed)
+                backtrackRenderPos(state, pdat, backtrackAmt, smoothed, scale)
             }
         }
 
@@ -99,31 +103,45 @@ export default function (noa) {
 // var offset = vec3.create()
 var local = vec3.create()
 
-export function setPhysicsFromPosition(physState, posState) {
+// Convert from scaled world coords to voxel space for physics
+export function setPhysicsFromPosition(physState, posState, scale) {
     var box = physState.body.aabb
     var ext = posState._extents
-    vec3.copy(box.base, ext)
-    vec3.set(box.vec, posState.width, posState.height, posState.width)
+    // Convert position from scaled world coords to voxel space
+    box.base[0] = ext[0] / scale
+    box.base[1] = ext[1] / scale
+    box.base[2] = ext[2] / scale
+    // Convert size from scaled world units to voxel units
+    var voxelWidth = posState.width / scale
+    var voxelHeight = posState.height / scale
+    vec3.set(box.vec, voxelWidth, voxelHeight, voxelWidth)
     vec3.add(box.max, box.base, box.vec)
 }
 
 
-function setPositionFromPhysics(physState, posState) {
+// Convert from voxel space back to scaled world coords
+function setPositionFromPhysics(physState, posState, scale) {
     var base = physState.body.aabb.base
     var hw = posState.width / 2
-    vec3.set(posState._localPosition, base[0] + hw, base[1], base[2] + hw)
+    // Convert from voxel space to scaled world coords
+    vec3.set(posState._localPosition,
+        base[0] * scale + hw,
+        base[1] * scale,
+        base[2] * scale + hw)
 }
 
 
-function backtrackRenderPos(physState, posState, backtrackAmt, smoothed) {
+function backtrackRenderPos(physState, posState, backtrackAmt, smoothed, scale) {
     // pos = pos + backtrack * body.velocity
+    // velocity is in voxel space, scale it for world coords
     var vel = physState.body.velocity
-    vec3.scaleAndAdd(local, posState._localPosition, vel, backtrackAmt)
+    var scaledBacktrack = backtrackAmt * scale
+    vec3.scaleAndAdd(local, posState._localPosition, vel, scaledBacktrack)
 
     // smooth out update if component is present
     // (this is set after sudden movements like auto-stepping)
     if (smoothed) vec3.lerp(local, posState._renderPosition, local, 0.3)
 
-    // copy values over to renderPosition, 
+    // copy values over to renderPosition,
     vec3.copy(posState._renderPosition, local)
 }

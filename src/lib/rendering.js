@@ -404,6 +404,8 @@ Rendering.prototype.dispose = function () {
     this.light = null
     this.camera = null
     this._highlightMesh = null
+    // Clear FPS tracking data
+    this._fpsFrameTimes = []
 }
 
 

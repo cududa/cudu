@@ -283,7 +283,7 @@ export class Entities extends ECS {
         vec3.add(posDat.position, posDat._localPosition, offset)
         updatePositionExtents(posDat)
         var physDat = this.getPhysics(id)
-        if (physDat) setPhysicsFromPosition(physDat, posDat)
+        if (physDat) setPhysicsFromPosition(physDat, posDat, this.noa.blockScale)
     }
 
 
@@ -313,19 +313,22 @@ export class Entities extends ECS {
     }
 
 
-    /** 
-     * Checks whether a voxel is obstructed by any entity (with the 
+    /**
+     * Checks whether a voxel is obstructed by any entity (with the
      * `collidesTerrain` component)
     */
     isTerrainBlocked(x, y, z) {
         // checks if terrain location is blocked by entities
+        // x,y,z are voxel coordinates, convert to local scaled world coords
         var off = this.noa.worldOriginOffset
-        var xlocal = Math.floor(x - off[0])
-        var ylocal = Math.floor(y - off[1])
-        var zlocal = Math.floor(z - off[2])
+        var scale = this.noa.blockScale
+        var xlocal = x * scale - off[0]
+        var ylocal = y * scale - off[1]
+        var zlocal = z * scale - off[2]
+        // Block extents in local scaled coords (voxel is scale x scale x scale)
         var blockExt = [
-            xlocal + 0.001, ylocal + 0.001, zlocal + 0.001,
-            xlocal + 0.999, ylocal + 0.999, zlocal + 0.999,
+            xlocal + 0.001 * scale, ylocal + 0.001 * scale, zlocal + 0.001 * scale,
+            xlocal + (1 - 0.001) * scale, ylocal + (1 - 0.001) * scale, zlocal + (1 - 0.001) * scale,
         ]
         var list = this.getStatesList(this.names.collideTerrain)
         for (var i = 0; i < list.length; i++) {

@@ -3398,17 +3398,28 @@ class Camera {
 function cameraObstructionDistance(self) {
     if (!self._sweepBox) {
         self._sweepBox = new aabb([0, 0, 0], [0.2, 0.2, 0.2]);
-        self._sweepGetVoxel = self.noa.world.getBlockSolidity.bind(self.noa.world);
         self._sweepVec = glVec3.create();
         self._sweepHit = () => true;
     }
+    // Create getter that converts from scaled world coords to voxel coords
+    var scale = self.noa.blockScale;
+    var sweepGetVoxel = (x, y, z) => {
+        var vx = Math.floor(x / scale);
+        var vy = Math.floor(y / scale);
+        var vz = Math.floor(z / scale);
+        return self.noa.world.getBlockSolidity(vx, vy, vz)
+    };
     var pos = glVec3.copy(self._sweepVec, self._localGetTargetPosition());
     glVec3.add(pos, pos, self.noa.worldOriginOffset);
-    for (var i = 0; i < 3; i++) pos[i] -= 0.1;
+    for (var i = 0; i < 3; i++) pos[i] -= 0.1 * scale;
     self._sweepBox.setPosition(pos);
+    // Scale the box size to match block scale
+    self._sweepBox.vec[0] = 0.2 * scale;
+    self._sweepBox.vec[1] = 0.2 * scale;
+    self._sweepBox.vec[2] = 0.2 * scale;
     var dist = Math.max(self.zoomDistance, self.currentZoom) + 0.1;
     glVec3.scale(self._sweepVec, self.getDirection(), -dist);
-    return sweep$3(self._sweepGetVoxel, self._sweepBox, self._sweepVec, self._sweepHit, true)
+    return sweep$3(sweepGetVoxel, self._sweepBox, self._sweepVec, self._sweepHit, true)
 }
 
 
@@ -4419,6 +4430,10 @@ class PhysicsState {
 
 function physicsComp (noa) {
 
+    // Physics runs in "voxel space" (unscaled) for correct collision detection.
+    // Positions are converted to/from scaled world coords here.
+    var scale = noa.blockScale;
+
     return {
 
         name: 'physics',
@@ -4431,7 +4446,7 @@ function physicsComp (noa) {
             state.body = noa.physics.addBody();
             // implicitly assume body has a position component, to get size
             var posDat = noa.ents.getPositionData(state.__id);
-            setPhysicsFromPosition(state, posDat);
+            setPhysicsFromPosition(state, posDat, scale);
         },
 
 
@@ -4441,8 +4456,8 @@ function physicsComp (noa) {
             // even if physics component is removed in collision handler
             if (noa.ents.hasPosition(state.__id)) {
                 var pdat = noa.ents.getPositionData(state.__id);
-                setPositionFromPhysics(state, pdat);
-                backtrackRenderPos(state, pdat, 0, false);
+                setPositionFromPhysics(state, pdat, scale);
+                backtrackRenderPos(state, pdat, 0, false, scale);
             }
             // Clear body callbacks before removal to prevent memory retention
             if (state.body) {
@@ -4458,7 +4473,7 @@ function physicsComp (noa) {
                 var state = states[i];
                 var pdat = noa.ents.getPositionData(state.__id);
                 if (!pdat) continue // defensive check for mid-frame deletion
-                setPositionFromPhysics(state, pdat);
+                setPositionFromPhysics(state, pdat, scale);
             }
         },
 
@@ -4484,7 +4499,7 @@ function physicsComp (noa) {
                 var pdat = noa.ents.getPositionData(id);
                 if (!pdat) continue // defensive check for mid-frame deletion
                 var smoothed = noa.ents.cameraSmoothed(id);
-                backtrackRenderPos(state, pdat, backtrackAmt, smoothed);
+                backtrackRenderPos(state, pdat, backtrackAmt, smoothed, scale);
             }
         }
 
@@ -4497,32 +4512,46 @@ function physicsComp (noa) {
 // var offset = vec3.create()
 var local = glVec3.create();
 
-function setPhysicsFromPosition(physState, posState) {
+// Convert from scaled world coords to voxel space for physics
+function setPhysicsFromPosition(physState, posState, scale) {
     var box = physState.body.aabb;
     var ext = posState._extents;
-    glVec3.copy(box.base, ext);
-    glVec3.set(box.vec, posState.width, posState.height, posState.width);
+    // Convert position from scaled world coords to voxel space
+    box.base[0] = ext[0] / scale;
+    box.base[1] = ext[1] / scale;
+    box.base[2] = ext[2] / scale;
+    // Convert size from scaled world units to voxel units
+    var voxelWidth = posState.width / scale;
+    var voxelHeight = posState.height / scale;
+    glVec3.set(box.vec, voxelWidth, voxelHeight, voxelWidth);
     glVec3.add(box.max, box.base, box.vec);
 }
 
 
-function setPositionFromPhysics(physState, posState) {
+// Convert from voxel space back to scaled world coords
+function setPositionFromPhysics(physState, posState, scale) {
     var base = physState.body.aabb.base;
     var hw = posState.width / 2;
-    glVec3.set(posState._localPosition, base[0] + hw, base[1], base[2] + hw);
+    // Convert from voxel space to scaled world coords
+    glVec3.set(posState._localPosition,
+        base[0] * scale + hw,
+        base[1] * scale,
+        base[2] * scale + hw);
 }
 
 
-function backtrackRenderPos(physState, posState, backtrackAmt, smoothed) {
+function backtrackRenderPos(physState, posState, backtrackAmt, smoothed, scale) {
     // pos = pos + backtrack * body.velocity
+    // velocity is in voxel space, scale it for world coords
     var vel = physState.body.velocity;
-    glVec3.scaleAndAdd(local, posState._localPosition, vel, backtrackAmt);
+    var scaledBacktrack = backtrackAmt * scale;
+    glVec3.scaleAndAdd(local, posState._localPosition, vel, scaledBacktrack);
 
     // smooth out update if component is present
     // (this is set after sudden movements like auto-stepping)
     if (smoothed) glVec3.lerp(local, posState._renderPosition, local, 0.3);
 
-    // copy values over to renderPosition, 
+    // copy values over to renderPosition,
     glVec3.copy(posState._renderPosition, local);
 }
 
@@ -7601,7 +7630,7 @@ class Entities extends ECS {
         glVec3.add(posDat.position, posDat._localPosition, offset);
         updatePositionExtents(posDat);
         var physDat = this.getPhysics(id);
-        if (physDat) setPhysicsFromPosition(physDat, posDat);
+        if (physDat) setPhysicsFromPosition(physDat, posDat, this.noa.blockScale);
     }
 
 
@@ -7631,19 +7660,22 @@ class Entities extends ECS {
     }
 
 
-    /** 
-     * Checks whether a voxel is obstructed by any entity (with the 
+    /**
+     * Checks whether a voxel is obstructed by any entity (with the
      * `collidesTerrain` component)
     */
     isTerrainBlocked(x, y, z) {
         // checks if terrain location is blocked by entities
+        // x,y,z are voxel coordinates, convert to local scaled world coords
         var off = this.noa.worldOriginOffset;
-        var xlocal = Math.floor(x - off[0]);
-        var ylocal = Math.floor(y - off[1]);
-        var zlocal = Math.floor(z - off[2]);
+        var scale = this.noa.blockScale;
+        var xlocal = x * scale - off[0];
+        var ylocal = y * scale - off[1];
+        var zlocal = z * scale - off[2];
+        // Block extents in local scaled coords (voxel is scale x scale x scale)
         var blockExt = [
-            xlocal + 0.001, ylocal + 0.001, zlocal + 0.001,
-            xlocal + 0.999, ylocal + 0.999, zlocal + 0.999,
+            xlocal + 0.001 * scale, ylocal + 0.001 * scale, zlocal + 0.001 * scale,
+            xlocal + (1 - 0.001) * scale, ylocal + (1 - 0.001) * scale, zlocal + (1 - 0.001) * scale,
         ];
         var list = this.getStatesList(this.names.collideTerrain);
         for (var i = 0; i < list.length; i++) {
@@ -8048,9 +8080,10 @@ function ObjectMesher(noa) {
 
     // called by world when an object block is set or cleared
     this.setObjectBlock = function (chunk, blockID, i, j, k) {
-        var x = chunk.x + i;
-        var y = chunk.y + j;
-        var z = chunk.z + k;
+        // Use voxel coordinates for key and handlers (not scaled world coords)
+        var x = chunk.i * chunk.size + i;
+        var y = chunk.j * chunk.size + j;
+        var z = chunk.k * chunk.size + k;
         var key = `${x}:${y}:${z}`;
 
         var oldID = chunk._objectBlocks[key] || 0;
@@ -10624,6 +10657,8 @@ Rendering.prototype.dispose = function () {
     this.light = null;
     this.camera = null;
     this._highlightMesh = null;
+    // Clear FPS tracking data
+    this._fpsFrameTimes = [];
 };
 
 
@@ -11641,27 +11676,32 @@ class Physics extends Physics$1 {
         var solidLookup = noa.registry._solidityLookup;
         var fluidLookup = noa.registry._fluidityLookup;
 
-        // physics engine runs in offset coords, so voxel getters need to match
+        // Physics runs in "voxel space" (unscaled) so voxel-aabb-sweep works correctly.
+        // Positions are converted to/from scaled world coords in the physics component.
+        // The offset needs to be converted to voxel space as well.
         var offset = noa.worldOriginOffset;
         var scale = noa.blockScale;
 
-        // Convert scaled world coordinates to voxel coordinates
+        // blockGetter receives voxel-space coordinates, convert offset to voxel space
         var blockGetter = (x, y, z) => {
-            var vx = Math.floor((x + offset[0]) / scale);
-            var vy = Math.floor((y + offset[1]) / scale);
-            var vz = Math.floor((z + offset[2]) / scale);
+            var vx = Math.floor(x + offset[0] / scale);
+            var vy = Math.floor(y + offset[1] / scale);
+            var vz = Math.floor(z + offset[2] / scale);
             var id = world.getBlockID(vx, vy, vz);
             return solidLookup[id]
         };
         var isFluidGetter = (x, y, z) => {
-            var vx = Math.floor((x + offset[0]) / scale);
-            var vy = Math.floor((y + offset[1]) / scale);
-            var vz = Math.floor((z + offset[2]) / scale);
+            var vx = Math.floor(x + offset[0] / scale);
+            var vy = Math.floor(y + offset[1] / scale);
+            var vz = Math.floor(z + offset[2] / scale);
             var id = world.getBlockID(vx, vy, vz);
             return fluidLookup[id]
         };
 
         super(opts, blockGetter, isFluidGetter);
+
+        /** @internal */
+        this._blockScale = scale;
     }
 
 }
@@ -11870,7 +11910,11 @@ Chunk.prototype.set = function (i, j, k, newID) {
 function callBlockHandler(chunk, handlers, type, i, j, k) {
     var handler = handlers[type];
     if (!handler) return
-    handler(chunk.x + i, chunk.y + j, chunk.z + k);
+    // Pass voxel coordinates to handlers (not scaled world coords)
+    var voxelX = chunk.i * chunk.size + i;
+    var voxelY = chunk.j * chunk.size + j;
+    var voxelZ = chunk.k * chunk.size + k;
+    handler(voxelX, voxelY, voxelZ);
 }
 
 
@@ -13451,9 +13495,10 @@ class Engine extends eventsExports.EventEmitter {
         /**
          * Scale factor for voxel rendering.
          * A value of 0.8 makes each block render at 0.8x0.8x0.8 world units.
+         * This affects rendering, physics, raycasting, and coordinate conversions.
          * @type {number}
          */
-        this.blockScale = opts.blockScale;
+        this.blockScale = (opts.blockScale > 0) ? opts.blockScale : 1.0;
 
         // how far engine is into the current tick. Updated each render.
         /** @internal */

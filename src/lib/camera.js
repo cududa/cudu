@@ -314,17 +314,28 @@ export class Camera {
 function cameraObstructionDistance(self) {
     if (!self._sweepBox) {
         self._sweepBox = new aabb([0, 0, 0], [0.2, 0.2, 0.2])
-        self._sweepGetVoxel = self.noa.world.getBlockSolidity.bind(self.noa.world)
         self._sweepVec = vec3.create()
         self._sweepHit = () => true
     }
+    // Create getter that converts from scaled world coords to voxel coords
+    var scale = self.noa.blockScale
+    var sweepGetVoxel = (x, y, z) => {
+        var vx = Math.floor(x / scale)
+        var vy = Math.floor(y / scale)
+        var vz = Math.floor(z / scale)
+        return self.noa.world.getBlockSolidity(vx, vy, vz)
+    }
     var pos = vec3.copy(self._sweepVec, self._localGetTargetPosition())
     vec3.add(pos, pos, self.noa.worldOriginOffset)
-    for (var i = 0; i < 3; i++) pos[i] -= 0.1
+    for (var i = 0; i < 3; i++) pos[i] -= 0.1 * scale
     self._sweepBox.setPosition(pos)
+    // Scale the box size to match block scale
+    self._sweepBox.vec[0] = 0.2 * scale
+    self._sweepBox.vec[1] = 0.2 * scale
+    self._sweepBox.vec[2] = 0.2 * scale
     var dist = Math.max(self.zoomDistance, self.currentZoom) + 0.1
     vec3.scale(self._sweepVec, self.getDirection(), -dist)
-    return sweep(self._sweepGetVoxel, self._sweepBox, self._sweepVec, self._sweepHit, true)
+    return sweep(sweepGetVoxel, self._sweepBox, self._sweepVec, self._sweepHit, true)
 }
 
 
