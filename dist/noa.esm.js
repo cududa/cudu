@@ -10809,10 +10809,14 @@ Rendering.prototype.disposeChunkForRendering = function (chunk) {
 
 
 
+// Cached Vector3 for origin rebasing to avoid per-rebase allocation
+var _rebaseVec = new Vector3(0, 0, 0);
+
 // change world origin offset, and rebase everything with a position
 /** @internal */
 Rendering.prototype._rebaseOrigin = function (delta) {
-    var dvec = new Vector3(delta[0], delta[1], delta[2]);
+    _rebaseVec.set(delta[0], delta[1], delta[2]);
+    var dvec = _rebaseVec;
 
     this.scene.meshes.forEach(mesh => {
         // parented meshes don't live in the world coord system
