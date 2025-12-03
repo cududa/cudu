@@ -404,16 +404,19 @@ World.prototype.setAddRemoveDistanceFromBakedWorld = function (loader, spawnPosi
 
     var chunkSize = bounds.chunkSize || this._chunkSize
     var buffer = (options && typeof options.buffer === 'number') ? options.buffer : 1
+    var blockScale = this.noa.blockScale || 1.0
 
     // Default spawn to origin if not provided
     var spawnX = (spawnPosition && spawnPosition[0]) || 0
     var spawnY = (spawnPosition && spawnPosition[1]) || 0
     var spawnZ = (spawnPosition && spawnPosition[2]) || 0
 
-    // Convert spawn position to chunk indices
-    var spawnChunkX = Math.floor(spawnX / chunkSize)
-    var spawnChunkY = Math.floor(spawnY / chunkSize)
-    var spawnChunkZ = Math.floor(spawnZ / chunkSize)
+    // Convert spawn position from world coords to voxel coords, then to chunk indices
+    // With blockScale, world coords = voxel coords * blockScale
+    // So voxel coords = world coords / blockScale
+    var spawnChunkX = Math.floor(spawnX / blockScale / chunkSize)
+    var spawnChunkY = Math.floor(spawnY / blockScale / chunkSize)
+    var spawnChunkZ = Math.floor(spawnZ / blockScale / chunkSize)
 
     // Calculate distance from spawn chunk to each bound of the baked world
     var distToMinX = Math.abs(spawnChunkX - bounds.minX)

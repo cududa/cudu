@@ -248,18 +248,19 @@ InstanceManager.prototype.addInstance = function (chunk, key, i, j, k, transform
     var ix = this.count << 4
     this.locToKey[this.count] = key
     this.keyToIndex[key] = ix
+    var scale = this.noa.blockScale
     if (transform) {
-        transform.position.x += (chunk.x - rebaseVec[0]) + i
-        transform.position.y += (chunk.y - rebaseVec[1]) + j
-        transform.position.z += (chunk.z - rebaseVec[2]) + k
+        transform.position.x += (chunk.x - rebaseVec[0]) + (i + 0.5) * scale
+        transform.position.y += (chunk.y - rebaseVec[1]) + j * scale
+        transform.position.z += (chunk.z - rebaseVec[2]) + (k + 0.5) * scale
         transform.computeWorldMatrix(true)
         var xformArr = transform._localMatrix._m
         copyMatrixData(xformArr, 0, this.buffer, ix)
     } else {
         var matArray = tempMatrixArray
-        matArray[12] = (chunk.x - rebaseVec[0]) + i + 0.5
-        matArray[13] = (chunk.y - rebaseVec[1]) + j
-        matArray[14] = (chunk.z - rebaseVec[2]) + k + 0.5
+        matArray[12] = (chunk.x - rebaseVec[0]) + (i + 0.5) * scale
+        matArray[13] = (chunk.y - rebaseVec[1]) + j * scale
+        matArray[14] = (chunk.z - rebaseVec[2]) + (k + 0.5) * scale
         copyMatrixData(matArray, 0, this.buffer, ix)
     }
     this.count++

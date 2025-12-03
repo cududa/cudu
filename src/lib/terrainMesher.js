@@ -737,12 +737,13 @@ function MeshBuilder(noa, terrainMatManager) {
 
     function addPositionValues(posArr, faceNum, i, j, k, axis, w, h) {
         var offset = faceNum * 12
+        var scale = noa.blockScale
 
-        var loc = [i, j, k]
+        var loc = [i * scale, j * scale, k * scale]
         var du = [0, 0, 0]
         var dv = [0, 0, 0]
-        du[(axis === 2) ? 0 : 2] = w
-        dv[(axis === 1) ? 0 : 1] = h
+        du[(axis === 2) ? 0 : 2] = w * scale
+        dv[(axis === 1) ? 0 : 1] = h * scale
 
         for (var ix = 0; ix < 3; ix++) {
             posArr[offset + ix] = loc[ix]

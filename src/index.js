@@ -42,13 +42,14 @@ var defaultOptions = {
     debug: false,
     silent: false,
     silentBabylon: false,
+    blockScale: 1.0,        // Scale factor for voxel rendering (1.0 = 1 voxel = 1 world unit)
     playerHeight: 1.8,
     playerWidth: 0.6,
     playerStart: [0, 10, 0],
     playerAutoStep: false,
     playerShadowComponent: true,
     tickRate: 30,           // ticks per second
-    maxRenderRate: 0,       // max FPS, 0 for uncapped 
+    maxRenderRate: 0,       // max FPS, 0 for uncapped
     blockTestDistance: 10,
     stickyPointerLock: true,
     dragCameraOutsidePointerLock: true,
@@ -84,13 +85,14 @@ export class Engine extends EventEmitter {
      * var defaultOptions = {
      *    debug: false,
      *    silent: false,
+     *    blockScale: 1.0,        // Scale factor for voxel rendering
      *    playerHeight: 1.8,
      *    playerWidth: 0.6,
      *    playerStart: [0, 10, 0],
      *    playerAutoStep: false,
      *    playerShadowComponent: true,
      *    tickRate: 30,           // ticks per second
-     *    maxRenderRate: 0,       // max FPS, 0 for uncapped 
+     *    maxRenderRate: 0,       // max FPS, 0 for uncapped
      *    blockTestDistance: 10,
      *    stickyPointerLock: true,
      *    dragCameraOutsidePointerLock: true,
@@ -140,6 +142,13 @@ export class Engine extends EventEmitter {
         /** @internal */
         this.worldOriginOffset = [0, 0, 0]
 
+        /**
+         * Scale factor for voxel rendering.
+         * A value of 0.8 makes each block render at 0.8x0.8x0.8 world units.
+         * @type {number}
+         */
+        this.blockScale = opts.blockScale
+
         // how far engine is into the current tick. Updated each render.
         /** @internal */
         this.positionInCurrentTick = 0
@@ -176,6 +185,15 @@ export class Engine extends EventEmitter {
         Object.defineProperty(this, 'maxRenderRate', {
             get: () => this.container._shell.maxRenderRate,
             set: (v) => { this.container._shell.maxRenderRate = v || 0 },
+        })
+
+        /** Current frames per second (rolling average)
+         * @type {number}
+         * @readonly
+         */
+        this.fps = 0
+        Object.defineProperty(this, 'fps', {
+            get: () => this.rendering.fps
         })
 
 
@@ -313,8 +331,14 @@ export class Engine extends EventEmitter {
 
         /** @internal */
         this._pickTestVoxel = (x, y, z) => {
+            // x, y, z are in voxel space (raycast input is scaled to voxel coords)
+            // worldOriginOffset is in scaled world coords, convert to voxel coords
+            var scale = this.blockScale
             var off = this.worldOriginOffset
-            var id = this.world.getBlockID(x + off[0], y + off[1], z + off[2])
+            var offVoxelX = Math.floor(off[0] / scale)
+            var offVoxelY = Math.floor(off[1] / scale)
+            var offVoxelZ = Math.floor(off[2] / scale)
+            var id = this.world.getBlockID(x + offVoxelX, y + offVoxelY, z + offVoxelZ)
             var fn = this._pickTestFunction || this.registry.getBlockSolidity
             return fn(id)
         }
@@ -688,15 +712,25 @@ export class Engine extends EventEmitter {
         dir = dir || this.camera.getDirection()
         dist = dist || -1
         if (dist < 0) dist = this.blockTestDistance
+
+        // Convert from scaled world coords to voxel coords for raycast
+        var scale = this.blockScale
+        var voxelPos = vec3.scale([], pos, 1 / scale)
+        var voxelDist = dist / scale
+
         var result = this._pickResult
         var rpos = result._localPosition
         var rnorm = result.normal
-        var hit = raycast(this._pickTestVoxel, pos, dir, dist, rpos, rnorm)
+        var hit = raycast(this._pickTestVoxel, voxelPos, dir, voxelDist, rpos, rnorm)
         this._pickTestFunction = null
         if (!hit) return null
+
+        // Convert result back to scaled world coords
+        vec3.scale(rpos, rpos, scale)
+
         // position is right on a voxel border - adjust it so that flooring works reliably
         // adjust along normal direction, i.e. away from the block struck
-        vec3.scaleAndAdd(rpos, rpos, rnorm, 0.01)
+        vec3.scaleAndAdd(rpos, rpos, rnorm, 0.01 * scale)
         // add global result
         this.localToGlobal(rpos, result.position)
         return result
@@ -760,8 +794,15 @@ function updateBlockTargets(noa) {
     var result = noa._localPick(null, null, null, blockIdFn)
     if (result) {
         var dat = noa._targetedBlockDat
+        var scale = noa.blockScale
+        // Convert from scaled world coords to voxel coords
+        var voxelPos = [
+            result.position[0] / scale,
+            result.position[1] / scale,
+            result.position[2] / scale
+        ]
         // pick stops just shy of voxel boundary, so floored pos is the adjacent voxel
-        vec3.floor(dat.adjacent, result.position)
+        vec3.floor(dat.adjacent, voxelPos)
         vec3.copy(dat.normal, result.normal)
         vec3.sub(dat.position, dat.adjacent, dat.normal)
         dat.blockID = noa.world.getBlockID(dat.position[0], dat.position[1], dat.position[2])

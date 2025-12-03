@@ -22,6 +22,7 @@ export class Engine extends EventEmitter {
      * var defaultOptions = {
      *    debug: false,
      *    silent: false,
+     *    blockScale: 1.0,        // Scale factor for voxel rendering
      *    playerHeight: 1.8,
      *    playerWidth: 0.6,
      *    playerStart: [0, 10, 0],
@@ -63,6 +64,12 @@ export class Engine extends EventEmitter {
     _originRebaseDistance: any;
     /** @internal */
     worldOriginOffset: number[];
+    /**
+     * Scale factor for voxel rendering.
+     * A value of 0.8 makes each block render at 0.8x0.8x0.8 world units.
+     * @type {number}
+     */
+    blockScale: number;
     /** @internal */
     positionInCurrentTick: number;
     /**
@@ -87,6 +94,11 @@ export class Engine extends EventEmitter {
      * @type {number}
      */
     maxRenderRate: number;
+    /** Current frames per second (rolling average)
+     * @type {number}
+     * @readonly
+     */
+    readonly fps: number;
     /** Manages key and mouse input bindings */
     inputs: Inputs;
     /** A registry where voxel/material properties are managed */

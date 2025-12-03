@@ -107,6 +107,16 @@ export class Rendering {
         /** @internal */
         this._disposed = false
 
+        // FPS tracking
+        /** @internal */
+        this._fpsFrameTimes = []
+        /** @internal */
+        this._fpsWindowSize = 30 // average over last 30 frames
+        /** @internal */
+        this._lastFrameTime = performance.now()
+        /** Current frames per second (rolling average) */
+        this.fps = 0
+
         /** the Babylon.js Engine object for the scene */
         this.engine = null
         /** the Babylon.js Scene object for the world */
@@ -353,6 +363,7 @@ Rendering.prototype.render = function () {
     this.scene.render()
     profile_hook('render')
     fps_hook()
+    updateFPS(this)
     this.engine.endFrame()
     profile_hook('endFrame')
     profile_hook('end')
@@ -434,22 +445,26 @@ Rendering.prototype.pickTerrainWithRay = function (origin, direction, distance =
 /** @internal */
 Rendering.prototype.highlightBlockFace = function (show, posArr, normArr) {
     var m = getHighlightMesh(this)
+    var scale = this.noa.blockScale
     if (show) {
-        // floored local coords for highlight mesh
-        this.noa.globalToLocal(posArr, null, hlpos)
+        // posArr is in voxel coords, convert to scaled world coords then to local
+        var scaledPos = [posArr[0] * scale, posArr[1] * scale, posArr[2] * scale]
+        this.noa.globalToLocal(scaledPos, null, hlpos)
         // offset to avoid z-fighting, bigger when camera is far away
         var dist = glvec3.dist(this.noa.camera._localGetPosition(), hlpos)
         var slop = 0.001 + 0.001 * dist
         for (var i = 0; i < 3; i++) {
             if (normArr[i] === 0) {
-                hlpos[i] += 0.5
+                hlpos[i] += 0.5 * scale
             } else {
-                hlpos[i] += (normArr[i] > 0) ? 1 + slop : -slop
+                hlpos[i] += (normArr[i] > 0) ? scale + slop : -slop
             }
         }
         m.position.copyFromFloats(hlpos[0], hlpos[1], hlpos[2])
         m.rotation.x = (normArr[1]) ? Math.PI / 2 : 0
         m.rotation.y = (normArr[0]) ? Math.PI / 2 : 0
+        // Scale the mesh to match block size
+        m.scaling.setAll(scale)
     }
     m.setEnabled(show)
 }
@@ -816,6 +831,32 @@ var profile_hook = (PROFILE) ?
     makeProfileHook(200, 'render internals') : () => { }
 
 
+
+// Update FPS calculation with rolling average
+function updateFPS(self) {
+    var now = performance.now()
+    var dt = now - self._lastFrameTime
+    self._lastFrameTime = now
+
+    // Skip extremely long frames (likely from pausing/unfocusing)
+    if (dt > 200) return
+
+    // Add frame time to rolling window
+    self._fpsFrameTimes.push(dt)
+    if (self._fpsFrameTimes.length > self._fpsWindowSize) {
+        self._fpsFrameTimes.shift()
+    }
+
+    // Calculate average frame time and convert to FPS
+    if (self._fpsFrameTimes.length > 0) {
+        var sum = 0
+        for (var i = 0; i < self._fpsFrameTimes.length; i++) {
+            sum += self._fpsFrameTimes[i]
+        }
+        var avgFrameTime = sum / self._fpsFrameTimes.length
+        self.fps = avgFrameTime > 0 ? Math.round(1000 / avgFrameTime) : 0
+    }
+}
 
 var fps_hook = function () { }
 

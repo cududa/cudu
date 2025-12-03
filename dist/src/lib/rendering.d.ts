@@ -42,6 +42,14 @@ export class Rendering {
     meshingCutoffTime: number;
     /** @internal */
     _disposed: boolean;
+    /** @internal */
+    _fpsFrameTimes: any[];
+    /** @internal */
+    _fpsWindowSize: number;
+    /** @internal */
+    _lastFrameTime: number;
+    /** Current frames per second (rolling average) */
+    fps: number;
     /** the Babylon.js Engine object for the scene */
     engine: Engine;
     /** the Babylon.js Scene object for the world */

@@ -45,13 +45,21 @@ export class Physics extends VoxelPhysics {
 
         // physics engine runs in offset coords, so voxel getters need to match
         var offset = noa.worldOriginOffset
+        var scale = noa.blockScale
 
+        // Convert scaled world coordinates to voxel coordinates
         var blockGetter = (x, y, z) => {
-            var id = world.getBlockID(x + offset[0], y + offset[1], z + offset[2])
+            var vx = Math.floor((x + offset[0]) / scale)
+            var vy = Math.floor((y + offset[1]) / scale)
+            var vz = Math.floor((z + offset[2]) / scale)
+            var id = world.getBlockID(vx, vy, vz)
             return solidLookup[id]
         }
         var isFluidGetter = (x, y, z) => {
-            var id = world.getBlockID(x + offset[0], y + offset[1], z + offset[2])
+            var vx = Math.floor((x + offset[0]) / scale)
+            var vy = Math.floor((y + offset[1]) / scale)
+            var vz = Math.floor((z + offset[2]) / scale)
+            var id = world.getBlockID(vx, vy, vz)
             return fluidLookup[id]
         }
 

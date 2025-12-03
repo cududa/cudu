@@ -38,9 +38,10 @@ export function Chunk(noa, requestID, ci, cj, ck, size, dataArray, fillVoxelID =
     this.j = cj
     this.k = ck
     this.size = size
-    this.x = ci * size
-    this.y = cj * size
-    this.z = ck * size
+    var scale = noa.blockScale
+    this.x = ci * size * scale
+    this.y = cj * size * scale
+    this.z = ck * size * scale
     this.pos = [this.x, this.y, this.z]
 
     // flags to track if things need re-meshing

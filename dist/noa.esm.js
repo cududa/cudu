@@ -8211,18 +8211,19 @@ InstanceManager.prototype.addInstance = function (chunk, key, i, j, k, transform
     var ix = this.count << 4;
     this.locToKey[this.count] = key;
     this.keyToIndex[key] = ix;
+    var scale = this.noa.blockScale;
     if (transform) {
-        transform.position.x += (chunk.x - rebaseVec[0]) + i;
-        transform.position.y += (chunk.y - rebaseVec[1]) + j;
-        transform.position.z += (chunk.z - rebaseVec[2]) + k;
+        transform.position.x += (chunk.x - rebaseVec[0]) + (i + 0.5) * scale;
+        transform.position.y += (chunk.y - rebaseVec[1]) + j * scale;
+        transform.position.z += (chunk.z - rebaseVec[2]) + (k + 0.5) * scale;
         transform.computeWorldMatrix(true);
         var xformArr = transform._localMatrix._m;
         copyMatrixData(xformArr, 0, this.buffer, ix);
     } else {
         var matArray = tempMatrixArray;
-        matArray[12] = (chunk.x - rebaseVec[0]) + i + 0.5;
-        matArray[13] = (chunk.y - rebaseVec[1]) + j;
-        matArray[14] = (chunk.z - rebaseVec[2]) + k + 0.5;
+        matArray[12] = (chunk.x - rebaseVec[0]) + (i + 0.5) * scale;
+        matArray[13] = (chunk.y - rebaseVec[1]) + j * scale;
+        matArray[14] = (chunk.z - rebaseVec[2]) + (k + 0.5) * scale;
         copyMatrixData(matArray, 0, this.buffer, ix);
     }
     this.count++;
@@ -9405,12 +9406,13 @@ function MeshBuilder(noa, terrainMatManager) {
 
     function addPositionValues(posArr, faceNum, i, j, k, axis, w, h) {
         var offset = faceNum * 12;
+        var scale = noa.blockScale;
 
-        var loc = [i, j, k];
+        var loc = [i * scale, j * scale, k * scale];
         var du = [0, 0, 0];
         var dv = [0, 0, 0];
-        du[(axis === 2) ? 0 : 2] = w;
-        dv[(axis === 1) ? 0 : 1] = h;
+        du[(axis === 2) ? 0 : 2] = w * scale;
+        dv[(axis === 1) ? 0 : 1] = h * scale;
 
         for (var ix = 0; ix < 3; ix++) {
             posArr[offset + ix] = loc[ix];
@@ -10323,6 +10325,16 @@ class Rendering {
         /** @internal */
         this._disposed = false;
 
+        // FPS tracking
+        /** @internal */
+        this._fpsFrameTimes = [];
+        /** @internal */
+        this._fpsWindowSize = 30; // average over last 30 frames
+        /** @internal */
+        this._lastFrameTime = performance.now();
+        /** Current frames per second (rolling average) */
+        this.fps = 0;
+
         /** the Babylon.js Engine object for the scene */
         this.engine = null;
         /** the Babylon.js Scene object for the world */
@@ -10569,6 +10581,7 @@ Rendering.prototype.render = function () {
     this.scene.render();
     profile_hook$1();
     fps_hook();
+    updateFPS(this);
     this.engine.endFrame();
     profile_hook$1();
     profile_hook$1();
@@ -10650,22 +10663,26 @@ Rendering.prototype.pickTerrainWithRay = function (origin, direction, distance =
 /** @internal */
 Rendering.prototype.highlightBlockFace = function (show, posArr, normArr) {
     var m = getHighlightMesh(this);
+    var scale = this.noa.blockScale;
     if (show) {
-        // floored local coords for highlight mesh
-        this.noa.globalToLocal(posArr, null, hlpos);
+        // posArr is in voxel coords, convert to scaled world coords then to local
+        var scaledPos = [posArr[0] * scale, posArr[1] * scale, posArr[2] * scale];
+        this.noa.globalToLocal(scaledPos, null, hlpos);
         // offset to avoid z-fighting, bigger when camera is far away
         var dist = glVec3.dist(this.noa.camera._localGetPosition(), hlpos);
         var slop = 0.001 + 0.001 * dist;
         for (var i = 0; i < 3; i++) {
             if (normArr[i] === 0) {
-                hlpos[i] += 0.5;
+                hlpos[i] += 0.5 * scale;
             } else {
-                hlpos[i] += (normArr[i] > 0) ? 1 + slop : -slop;
+                hlpos[i] += (normArr[i] > 0) ? scale + slop : -slop;
             }
         }
         m.position.copyFromFloats(hlpos[0], hlpos[1], hlpos[2]);
         m.rotation.x = (normArr[1]) ? Math.PI / 2 : 0;
         m.rotation.y = (normArr[0]) ? Math.PI / 2 : 0;
+        // Scale the mesh to match block size
+        m.scaling.setAll(scale);
     }
     m.setEnabled(show);
 };
@@ -11031,6 +11048,32 @@ Rendering.prototype.debug_MeshCount = function () {
 var profile_hook$1 = () => { };
 
 
+
+// Update FPS calculation with rolling average
+function updateFPS(self) {
+    var now = performance.now();
+    var dt = now - self._lastFrameTime;
+    self._lastFrameTime = now;
+
+    // Skip extremely long frames (likely from pausing/unfocusing)
+    if (dt > 200) return
+
+    // Add frame time to rolling window
+    self._fpsFrameTimes.push(dt);
+    if (self._fpsFrameTimes.length > self._fpsWindowSize) {
+        self._fpsFrameTimes.shift();
+    }
+
+    // Calculate average frame time and convert to FPS
+    if (self._fpsFrameTimes.length > 0) {
+        var sum = 0;
+        for (var i = 0; i < self._fpsFrameTimes.length; i++) {
+            sum += self._fpsFrameTimes[i];
+        }
+        var avgFrameTime = sum / self._fpsFrameTimes.length;
+        self.fps = avgFrameTime > 0 ? Math.round(1000 / avgFrameTime) : 0;
+    }
+}
 
 var fps_hook = function () { };
 
@@ -11598,13 +11641,21 @@ class Physics extends Physics$1 {
 
         // physics engine runs in offset coords, so voxel getters need to match
         var offset = noa.worldOriginOffset;
+        var scale = noa.blockScale;
 
+        // Convert scaled world coordinates to voxel coordinates
         var blockGetter = (x, y, z) => {
-            var id = world.getBlockID(x + offset[0], y + offset[1], z + offset[2]);
+            var vx = Math.floor((x + offset[0]) / scale);
+            var vy = Math.floor((y + offset[1]) / scale);
+            var vz = Math.floor((z + offset[2]) / scale);
+            var id = world.getBlockID(vx, vy, vz);
             return solidLookup[id]
         };
         var isFluidGetter = (x, y, z) => {
-            var id = world.getBlockID(x + offset[0], y + offset[1], z + offset[2]);
+            var vx = Math.floor((x + offset[0]) / scale);
+            var vy = Math.floor((y + offset[1]) / scale);
+            var vz = Math.floor((z + offset[2]) / scale);
+            var id = world.getBlockID(vx, vy, vz);
             return fluidLookup[id]
         };
 
@@ -11646,9 +11697,10 @@ function Chunk(noa, requestID, ci, cj, ck, size, dataArray, fillVoxelID = -1) {
     this.j = cj;
     this.k = ck;
     this.size = size;
-    this.x = ci * size;
-    this.y = cj * size;
-    this.z = ck * size;
+    var scale = noa.blockScale;
+    this.x = ci * size * scale;
+    this.y = cj * size * scale;
+    this.z = ck * size * scale;
     this.pos = [this.x, this.y, this.z];
 
     // flags to track if things need re-meshing
@@ -12362,16 +12414,19 @@ World.prototype.setAddRemoveDistanceFromBakedWorld = function (loader, spawnPosi
 
     var chunkSize = bounds.chunkSize || this._chunkSize;
     var buffer = (options && typeof options.buffer === 'number') ? options.buffer : 1;
+    var blockScale = this.noa.blockScale || 1.0;
 
     // Default spawn to origin if not provided
     var spawnX = (spawnPosition && spawnPosition[0]) || 0;
     var spawnY = (spawnPosition && spawnPosition[1]) || 0;
     var spawnZ = (spawnPosition && spawnPosition[2]) || 0;
 
-    // Convert spawn position to chunk indices
-    var spawnChunkX = Math.floor(spawnX / chunkSize);
-    var spawnChunkY = Math.floor(spawnY / chunkSize);
-    var spawnChunkZ = Math.floor(spawnZ / chunkSize);
+    // Convert spawn position from world coords to voxel coords, then to chunk indices
+    // With blockScale, world coords = voxel coords * blockScale
+    // So voxel coords = world coords / blockScale
+    var spawnChunkX = Math.floor(spawnX / blockScale / chunkSize);
+    var spawnChunkY = Math.floor(spawnY / blockScale / chunkSize);
+    var spawnChunkZ = Math.floor(spawnZ / blockScale / chunkSize);
 
     // Calculate distance from spawn chunk to each bound of the baked world
     var distToMinX = Math.abs(spawnChunkX - bounds.minX);
@@ -13291,13 +13346,14 @@ var defaultOptions = {
     debug: false,
     silent: false,
     silentBabylon: false,
+    blockScale: 1.0,        // Scale factor for voxel rendering (1.0 = 1 voxel = 1 world unit)
     playerHeight: 1.8,
     playerWidth: 0.6,
     playerStart: [0, 10, 0],
     playerAutoStep: false,
     playerShadowComponent: true,
     tickRate: 30,           // ticks per second
-    maxRenderRate: 0,       // max FPS, 0 for uncapped 
+    maxRenderRate: 0,       // max FPS, 0 for uncapped
     blockTestDistance: 10,
     stickyPointerLock: true,
     dragCameraOutsidePointerLock: true,
@@ -13333,13 +13389,14 @@ class Engine extends eventsExports.EventEmitter {
      * var defaultOptions = {
      *    debug: false,
      *    silent: false,
+     *    blockScale: 1.0,        // Scale factor for voxel rendering
      *    playerHeight: 1.8,
      *    playerWidth: 0.6,
      *    playerStart: [0, 10, 0],
      *    playerAutoStep: false,
      *    playerShadowComponent: true,
      *    tickRate: 30,           // ticks per second
-     *    maxRenderRate: 0,       // max FPS, 0 for uncapped 
+     *    maxRenderRate: 0,       // max FPS, 0 for uncapped
      *    blockTestDistance: 10,
      *    stickyPointerLock: true,
      *    dragCameraOutsidePointerLock: true,
@@ -13389,6 +13446,13 @@ class Engine extends eventsExports.EventEmitter {
         /** @internal */
         this.worldOriginOffset = [0, 0, 0];
 
+        /**
+         * Scale factor for voxel rendering.
+         * A value of 0.8 makes each block render at 0.8x0.8x0.8 world units.
+         * @type {number}
+         */
+        this.blockScale = opts.blockScale;
+
         // how far engine is into the current tick. Updated each render.
         /** @internal */
         this.positionInCurrentTick = 0;
@@ -13425,6 +13489,15 @@ class Engine extends eventsExports.EventEmitter {
         Object.defineProperty(this, 'maxRenderRate', {
             get: () => this.container._shell.maxRenderRate,
             set: (v) => { this.container._shell.maxRenderRate = v || 0; },
+        });
+
+        /** Current frames per second (rolling average)
+         * @type {number}
+         * @readonly
+         */
+        this.fps = 0;
+        Object.defineProperty(this, 'fps', {
+            get: () => this.rendering.fps
         });
 
 
@@ -13562,8 +13635,14 @@ class Engine extends eventsExports.EventEmitter {
 
         /** @internal */
         this._pickTestVoxel = (x, y, z) => {
+            // x, y, z are in voxel space (raycast input is scaled to voxel coords)
+            // worldOriginOffset is in scaled world coords, convert to voxel coords
+            var scale = this.blockScale;
             var off = this.worldOriginOffset;
-            var id = this.world.getBlockID(x + off[0], y + off[1], z + off[2]);
+            var offVoxelX = Math.floor(off[0] / scale);
+            var offVoxelY = Math.floor(off[1] / scale);
+            var offVoxelZ = Math.floor(off[2] / scale);
+            var id = this.world.getBlockID(x + offVoxelX, y + offVoxelY, z + offVoxelZ);
             var fn = this._pickTestFunction || this.registry.getBlockSolidity;
             return fn(id)
         };
@@ -13920,15 +13999,25 @@ class Engine extends eventsExports.EventEmitter {
         dir = dir || this.camera.getDirection();
         dist = dist || -1;
         if (dist < 0) dist = this.blockTestDistance;
+
+        // Convert from scaled world coords to voxel coords for raycast
+        var scale = this.blockScale;
+        var voxelPos = glVec3.scale([], pos, 1 / scale);
+        var voxelDist = dist / scale;
+
         var result = this._pickResult;
         var rpos = result._localPosition;
         var rnorm = result.normal;
-        var hit = raycast(this._pickTestVoxel, pos, dir, dist, rpos, rnorm);
+        var hit = raycast(this._pickTestVoxel, voxelPos, dir, voxelDist, rpos, rnorm);
         this._pickTestFunction = null;
         if (!hit) return null
+
+        // Convert result back to scaled world coords
+        glVec3.scale(rpos, rpos, scale);
+
         // position is right on a voxel border - adjust it so that flooring works reliably
         // adjust along normal direction, i.e. away from the block struck
-        glVec3.scaleAndAdd(rpos, rpos, rnorm, 0.01);
+        glVec3.scaleAndAdd(rpos, rpos, rnorm, 0.01 * scale);
         // add global result
         this.localToGlobal(rpos, result.position);
         return result
@@ -13992,8 +14081,15 @@ function updateBlockTargets(noa) {
     var result = noa._localPick(null, null, null, blockIdFn);
     if (result) {
         var dat = noa._targetedBlockDat;
+        var scale = noa.blockScale;
+        // Convert from scaled world coords to voxel coords
+        var voxelPos = [
+            result.position[0] / scale,
+            result.position[1] / scale,
+            result.position[2] / scale
+        ];
         // pick stops just shy of voxel boundary, so floored pos is the adjacent voxel
-        glVec3.floor(dat.adjacent, result.position);
+        glVec3.floor(dat.adjacent, voxelPos);
         glVec3.copy(dat.normal, result.normal);
         glVec3.sub(dat.position, dat.adjacent, dat.normal);
         dat.blockID = noa.world.getBlockID(dat.position[0], dat.position[1], dat.position[2]);
