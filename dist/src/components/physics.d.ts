@@ -11,7 +11,7 @@ export default function _default(noa: import("..").Engine): {
     system: (dt: any, states: any) => void;
     renderSystem: (dt: any, states: any) => void;
 };
-export function setPhysicsFromPosition(physState: any, posState: any, scale: any): void;
+export function setPhysicsFromPosition(physState: any, posState: any): void;
 export class PhysicsState {
     /** @type {import('voxel-physics-engine').RigidBody} */
     body: import("voxel-physics-engine").RigidBody;

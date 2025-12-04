@@ -283,7 +283,7 @@ export class Entities extends ECS {
         vec3.add(posDat.position, posDat._localPosition, offset)
         updatePositionExtents(posDat)
         var physDat = this.getPhysics(id)
-        if (physDat) setPhysicsFromPosition(physDat, posDat, this.noa.blockScale)
+        if (physDat) setPhysicsFromPosition(physDat, posDat)
     }
 
 

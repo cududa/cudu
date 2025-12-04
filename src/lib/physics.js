@@ -43,24 +43,24 @@ export class Physics extends VoxelPhysics {
         var solidLookup = noa.registry._solidityLookup
         var fluidLookup = noa.registry._fluidityLookup
 
-        // Physics runs in "voxel space" (unscaled) so voxel-aabb-sweep works correctly.
-        // Positions are converted to/from scaled world coords in the physics component.
-        // The offset needs to be converted to voxel space as well.
+        // Physics runs in world space (scaled coordinates).
+        // blockGetter converts world coords to voxel indices for terrain lookup.
         var offset = noa.worldOriginOffset
         var scale = noa.blockScale
 
-        // blockGetter receives voxel-space coordinates, convert offset to voxel space
+        // blockGetter receives local world-space coordinates.
+        // Convert to global world coords, then to voxel indices.
         var blockGetter = (x, y, z) => {
-            var vx = Math.floor(x + offset[0] / scale)
-            var vy = Math.floor(y + offset[1] / scale)
-            var vz = Math.floor(z + offset[2] / scale)
+            var vx = Math.floor((x + offset[0]) / scale)
+            var vy = Math.floor((y + offset[1]) / scale)
+            var vz = Math.floor((z + offset[2]) / scale)
             var id = world.getBlockID(vx, vy, vz)
             return solidLookup[id]
         }
         var isFluidGetter = (x, y, z) => {
-            var vx = Math.floor(x + offset[0] / scale)
-            var vy = Math.floor(y + offset[1] / scale)
-            var vz = Math.floor(z + offset[2] / scale)
+            var vx = Math.floor((x + offset[0]) / scale)
+            var vy = Math.floor((y + offset[1]) / scale)
+            var vz = Math.floor((z + offset[2]) / scale)
             var id = world.getBlockID(vx, vy, vz)
             return fluidLookup[id]
         }

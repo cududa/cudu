@@ -332,14 +332,14 @@ export class Engine extends EventEmitter {
 
         /** @internal */
         this._pickTestVoxel = (x, y, z) => {
-            // x, y, z are in voxel space (raycast input is scaled to voxel coords)
-            // worldOriginOffset is in scaled world coords, convert to voxel coords
+            // x, y, z are in voxel space (raycast converts input to voxel coords)
+            // Convert local voxel coords to global voxel indices
             var scale = this.blockScale
             var off = this.worldOriginOffset
-            var offVoxelX = Math.floor(off[0] / scale)
-            var offVoxelY = Math.floor(off[1] / scale)
-            var offVoxelZ = Math.floor(off[2] / scale)
-            var id = this.world.getBlockID(x + offVoxelX, y + offVoxelY, z + offVoxelZ)
+            var vx = Math.floor(x + off[0] / scale)
+            var vy = Math.floor(y + off[1] / scale)
+            var vz = Math.floor(z + off[2] / scale)
+            var id = this.world.getBlockID(vx, vy, vz)
             var fn = this._pickTestFunction || this.registry.getBlockSolidity
             return fn(id)
         }

@@ -4430,9 +4430,8 @@ class PhysicsState {
 
 function physicsComp (noa) {
 
-    // Physics runs in "voxel space" (unscaled) for correct collision detection.
-    // Positions are converted to/from scaled world coords here.
-    var scale = noa.blockScale;
+    // Physics runs in world space (scaled coordinates).
+    // No coordinate conversion needed here - blockGetter handles voxel conversion.
 
     return {
 
@@ -4446,7 +4445,7 @@ function physicsComp (noa) {
             state.body = noa.physics.addBody();
             // implicitly assume body has a position component, to get size
             var posDat = noa.ents.getPositionData(state.__id);
-            setPhysicsFromPosition(state, posDat, scale);
+            setPhysicsFromPosition(state, posDat);
         },
 
 
@@ -4456,8 +4455,8 @@ function physicsComp (noa) {
             // even if physics component is removed in collision handler
             if (noa.ents.hasPosition(state.__id)) {
                 var pdat = noa.ents.getPositionData(state.__id);
-                setPositionFromPhysics(state, pdat, scale);
-                backtrackRenderPos(state, pdat, 0, false, scale);
+                setPositionFromPhysics(state, pdat);
+                backtrackRenderPos(state, pdat, 0, false);
             }
             // Clear body callbacks before removal to prevent memory retention
             if (state.body) {
@@ -4473,7 +4472,7 @@ function physicsComp (noa) {
                 var state = states[i];
                 var pdat = noa.ents.getPositionData(state.__id);
                 if (!pdat) continue // defensive check for mid-frame deletion
-                setPositionFromPhysics(state, pdat, scale);
+                setPositionFromPhysics(state, pdat);
             }
         },
 
@@ -4499,7 +4498,7 @@ function physicsComp (noa) {
                 var pdat = noa.ents.getPositionData(id);
                 if (!pdat) continue // defensive check for mid-frame deletion
                 var smoothed = noa.ents.cameraSmoothed(id);
-                backtrackRenderPos(state, pdat, backtrackAmt, smoothed, scale);
+                backtrackRenderPos(state, pdat, backtrackAmt, smoothed);
             }
         }
 
@@ -4512,40 +4511,37 @@ function physicsComp (noa) {
 // var offset = vec3.create()
 var local = glVec3.create();
 
-// Convert from scaled world coords to voxel space for physics
-function setPhysicsFromPosition(physState, posState, scale) {
+// Set physics body from position state - physics runs in world space
+function setPhysicsFromPosition(physState, posState) {
     var box = physState.body.aabb;
     var ext = posState._extents;
-    // Convert position from scaled world coords to voxel space
-    box.base[0] = ext[0] / scale;
-    box.base[1] = ext[1] / scale;
-    box.base[2] = ext[2] / scale;
-    // Convert size from scaled world units to voxel units
-    var voxelWidth = posState.width / scale;
-    var voxelHeight = posState.height / scale;
-    glVec3.set(box.vec, voxelWidth, voxelHeight, voxelWidth);
+    // Position is already in world coords
+    box.base[0] = ext[0];
+    box.base[1] = ext[1];
+    box.base[2] = ext[2];
+    // Size is already in world units
+    glVec3.set(box.vec, posState.width, posState.height, posState.width);
     glVec3.add(box.max, box.base, box.vec);
 }
 
 
-// Convert from voxel space back to scaled world coords
-function setPositionFromPhysics(physState, posState, scale) {
+// Set position state from physics body - physics runs in world space
+function setPositionFromPhysics(physState, posState) {
     var base = physState.body.aabb.base;
     var hw = posState.width / 2;
-    // Convert from voxel space to scaled world coords
+    // Position is already in world coords
     glVec3.set(posState._localPosition,
-        base[0] * scale + hw,
-        base[1] * scale,
-        base[2] * scale + hw);
+        base[0] + hw,
+        base[1],
+        base[2] + hw);
 }
 
 
-function backtrackRenderPos(physState, posState, backtrackAmt, smoothed, scale) {
+function backtrackRenderPos(physState, posState, backtrackAmt, smoothed) {
     // pos = pos + backtrack * body.velocity
-    // velocity is in voxel space, scale it for world coords
+    // velocity is in world space
     var vel = physState.body.velocity;
-    var scaledBacktrack = backtrackAmt * scale;
-    glVec3.scaleAndAdd(local, posState._localPosition, vel, scaledBacktrack);
+    glVec3.scaleAndAdd(local, posState._localPosition, vel, backtrackAmt);
 
     // smooth out update if component is present
     // (this is set after sudden movements like auto-stepping)
@@ -7630,7 +7626,7 @@ class Entities extends ECS {
         glVec3.add(posDat.position, posDat._localPosition, offset);
         updatePositionExtents(posDat);
         var physDat = this.getPhysics(id);
-        if (physDat) setPhysicsFromPosition(physDat, posDat, this.noa.blockScale);
+        if (physDat) setPhysicsFromPosition(physDat, posDat);
     }
 
 
@@ -11676,24 +11672,24 @@ class Physics extends Physics$1 {
         var solidLookup = noa.registry._solidityLookup;
         var fluidLookup = noa.registry._fluidityLookup;
 
-        // Physics runs in "voxel space" (unscaled) so voxel-aabb-sweep works correctly.
-        // Positions are converted to/from scaled world coords in the physics component.
-        // The offset needs to be converted to voxel space as well.
+        // Physics runs in world space (scaled coordinates).
+        // blockGetter converts world coords to voxel indices for terrain lookup.
         var offset = noa.worldOriginOffset;
         var scale = noa.blockScale;
 
-        // blockGetter receives voxel-space coordinates, convert offset to voxel space
+        // blockGetter receives local world-space coordinates.
+        // Convert to global world coords, then to voxel indices.
         var blockGetter = (x, y, z) => {
-            var vx = Math.floor(x + offset[0] / scale);
-            var vy = Math.floor(y + offset[1] / scale);
-            var vz = Math.floor(z + offset[2] / scale);
+            var vx = Math.floor((x + offset[0]) / scale);
+            var vy = Math.floor((y + offset[1]) / scale);
+            var vz = Math.floor((z + offset[2]) / scale);
             var id = world.getBlockID(vx, vy, vz);
             return solidLookup[id]
         };
         var isFluidGetter = (x, y, z) => {
-            var vx = Math.floor(x + offset[0] / scale);
-            var vy = Math.floor(y + offset[1] / scale);
-            var vz = Math.floor(z + offset[2] / scale);
+            var vx = Math.floor((x + offset[0]) / scale);
+            var vy = Math.floor((y + offset[1]) / scale);
+            var vz = Math.floor((z + offset[2]) / scale);
             var id = world.getBlockID(vx, vy, vz);
             return fluidLookup[id]
         };
@@ -13682,14 +13678,14 @@ class Engine extends eventsExports.EventEmitter {
 
         /** @internal */
         this._pickTestVoxel = (x, y, z) => {
-            // x, y, z are in voxel space (raycast input is scaled to voxel coords)
-            // worldOriginOffset is in scaled world coords, convert to voxel coords
+            // x, y, z are in voxel space (raycast converts input to voxel coords)
+            // Convert local voxel coords to global voxel indices
             var scale = this.blockScale;
             var off = this.worldOriginOffset;
-            var offVoxelX = Math.floor(off[0] / scale);
-            var offVoxelY = Math.floor(off[1] / scale);
-            var offVoxelZ = Math.floor(off[2] / scale);
-            var id = this.world.getBlockID(x + offVoxelX, y + offVoxelY, z + offVoxelZ);
+            var vx = Math.floor(x + off[0] / scale);
+            var vy = Math.floor(y + off[1] / scale);
+            var vz = Math.floor(z + off[2] / scale);
+            var id = this.world.getBlockID(vx, vy, vz);
             var fn = this._pickTestFunction || this.registry.getBlockSolidity;
             return fn(id)
         };
