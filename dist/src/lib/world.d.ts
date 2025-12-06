@@ -205,12 +205,13 @@ export class World extends EventEmitter {
      * @param {[number, number, number]} [spawnPosition=[0,0,0]] - Player spawn position in world coordinates
      * @param {object} [options] - Optional configuration
      * @param {number} [options.buffer=1] - Extra chunks to load beyond minimum required (reduces pop-in when moving)
+     * @param {number} [options.cameraOffset=0] - Extra chunks (horizontal and vertical) to account for 3rd-person camera distance. For a camera 25 blocks away with chunk size 32, use cameraOffset=1.
      * @example
      * ```js
      * const loader = new BakedWorldLoader()
      * await loader.loadFromURL('/world.noaworld')
-     * // Configure based on spawn position with extra buffer for smoother loading
-     * noa.world.setAddRemoveDistanceFromBakedWorld(loader, [15, 5, 0], { buffer: 2 })
+     * // Configure for 3rd-person camera (~25 blocks away = ~1 chunk offset)
+     * noa.world.setAddRemoveDistanceFromBakedWorld(loader, [15, 5, 0], { buffer: 1, cameraOffset: 1 })
      * ```
      */
     setAddRemoveDistanceFromBakedWorld(loader: {
@@ -225,6 +226,7 @@ export class World extends EventEmitter {
         };
     }, spawnPosition?: [number, number, number], options?: {
         buffer?: number;
+        cameraOffset?: number;
     }): void;
     /**
      * Tells noa to discard voxel data within a given `AABB` (e.g. because

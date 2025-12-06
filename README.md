@@ -97,7 +97,24 @@ noa.world.registerChunkGenerator(async (x, y, z, data, signal) => {
 })
 
 // Auto-configure chunk distances from baked bounds
-noa.world.setAddRemoveDistanceFromBakedWorld(loader, spawnPosition)
+noa.world.setAddRemoveDistanceFromBakedWorld(loader, spawnPosition, {
+    buffer: 1,       // Extra chunks for smooth movement (default: 1)
+    cameraOffset: 1, // Extra chunks for 3rd-person camera distance (default: 0)
+})
+```
+
+### Chunk Distance Options
+
+The `setAddRemoveDistanceFromBakedWorld` method accepts options to fine-tune memory usage:
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `buffer` | 1 | Extra chunks loaded beyond minimum to reduce pop-in when moving |
+| `cameraOffset` | 0 | Extra chunks (horizontal + vertical) to account for 3rd-person camera. For a camera ~25 blocks away with chunk size 32, use `cameraOffset: 1` |
+
+For first-person games, omit `cameraOffset`. For third-person games, calculate as:
+```javascript
+const cameraOffset = Math.ceil(cameraDistance / chunkSize)
 ```
 
 ---

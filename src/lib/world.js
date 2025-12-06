@@ -6,11 +6,6 @@ import { LocationQueue, ChunkStorage, locationHasher } from './util'
 var PROFILE_EVERY = 0               // ticks
 var PROFILE_QUEUES_EVERY = 0        // ticks
 
-
-
-
-
-
 var defaultOptions = {
     chunkSize: 24,
     chunkAddDistance: [2, 2],           // [horizontal, vertical]
@@ -377,12 +372,13 @@ World.prototype.setAddRemoveDistance = function (addDist = 2, remDist = 3) {
  * @param {[number, number, number]} [spawnPosition=[0,0,0]] - Player spawn position in world coordinates
  * @param {object} [options] - Optional configuration
  * @param {number} [options.buffer=1] - Extra chunks to load beyond minimum required (reduces pop-in when moving)
+ * @param {number} [options.cameraOffset=0] - Extra chunks (horizontal and vertical) to account for 3rd-person camera distance. For a camera 25 blocks away with chunk size 32, use cameraOffset=1.
  * @example
  * ```js
  * const loader = new BakedWorldLoader()
  * await loader.loadFromURL('/world.noaworld')
- * // Configure based on spawn position with extra buffer for smoother loading
- * noa.world.setAddRemoveDistanceFromBakedWorld(loader, [15, 5, 0], { buffer: 2 })
+ * // Configure for 3rd-person camera (~25 blocks away = ~1 chunk offset)
+ * noa.world.setAddRemoveDistanceFromBakedWorld(loader, [15, 5, 0], { buffer: 1, cameraOffset: 1 })
  * ```
  */
 World.prototype.setAddRemoveDistanceFromBakedWorld = function (loader, spawnPosition, options) {
@@ -404,6 +400,7 @@ World.prototype.setAddRemoveDistanceFromBakedWorld = function (loader, spawnPosi
 
     var chunkSize = bounds.chunkSize || this._chunkSize
     var buffer = (options && typeof options.buffer === 'number') ? options.buffer : 1
+    var cameraOffset = (options && typeof options.cameraOffset === 'number') ? options.cameraOffset : 0
 
     // Default spawn to origin if not provided
     var spawnX = (spawnPosition && spawnPosition[0]) || 0
@@ -427,6 +424,11 @@ World.prototype.setAddRemoveDistanceFromBakedWorld = function (loader, spawnPosi
     var maxHoriz = Math.max(distToMinX, distToMaxX, distToMinZ, distToMaxZ)
     var maxVert = Math.max(distToMinY, distToMaxY)
 
+    // Add cameraOffset to account for 3rd-person camera seeing further than player position
+    // Applied to both dimensions since camera can pitch up/down to see distant terrain
+    maxHoriz = maxHoriz + cameraOffset
+    maxVert = maxVert + cameraOffset
+
     // Add buffer for smoother chunk loading when player moves around
     maxHoriz = maxHoriz + buffer
     maxVert = maxVert + buffer
@@ -447,7 +449,8 @@ World.prototype.setAddRemoveDistanceFromBakedWorld = function (loader, spawnPosi
     console.log('[noa] Auto-configured chunk distances from baked world: ' +
         'spawn chunk=[' + spawnChunkX + ',' + spawnChunkY + ',' + spawnChunkZ + '], ' +
         'add=[' + maxHoriz + ',' + maxVert + '], ' +
-        'remove=[' + (maxHoriz + 1) + ',' + (maxVert + 1) + ']')
+        'remove=[' + (maxHoriz + 1) + ',' + (maxVert + 1) + ']' +
+        (cameraOffset > 0 ? ', cameraOffset=' + cameraOffset : ''))
 }
 
 
