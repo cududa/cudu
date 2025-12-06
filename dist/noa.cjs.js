@@ -13314,7 +13314,7 @@ var defaultOptions = {
  * Takes an object full of optional settings as a parameter.
  * 
  * ```js
- * import { Engine } from 'noa-engine'
+ * import { Engine } from 'cudu'
  * var noa = new Engine({
  *    debug: false,
  * })
@@ -13376,7 +13376,7 @@ class Engine extends eventsExports.EventEmitter {
         this.version = version;
         if (!opts.silent) {
             var debugstr = (opts.debug) ? ' (debug)' : '';
-            console.log(`noa-engine v${this.version}${debugstr}`);
+            console.log(`cudu v${this.version}${debugstr}`);
         }
 
         /** @internal */

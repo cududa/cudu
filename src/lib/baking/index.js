@@ -1,11 +1,11 @@
 /**
- * World Baking System for noa-engine
+ * World Baking System for Cudu
  *
  * This module provides tools for "baking" procedurally generated worlds
  * to binary files that can be loaded without procedural generation code,
  * enabling tree-shaking in production builds.
  *
- * @module noa-engine/baking
+ * @module cudu/baking
  */
 
 // Production loader - lightweight, no proc-gen dependencies

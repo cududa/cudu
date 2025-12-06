@@ -3,7 +3,7 @@
  * Takes an object full of optional settings as a parameter.
  *
  * ```js
- * import { Engine } from 'noa-engine'
+ * import { Engine } from 'cudu'
  * var noa = new Engine({
  *    debug: false,
  * })

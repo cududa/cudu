@@ -2,7 +2,7 @@
 # Notes on positions
 
 
-Like all entity data, the position of an entity in `noa` lives in a
+Like all entity data, the position of an entity in Cudu lives in a
 component state object - specifically, the state of the 
 [position](../src/components/position.js) component. 
 There are several accessors on `noa.entities` for working with positions:
@@ -39,7 +39,7 @@ in the 3D scene.
 ## Advanced
 
 Behind the scenes things are a little more complicated. 
-Game worlds tend to be large, so to avoid precision bugs `noa` 
+Game worlds tend to be large, so to avoid precision bugs Cudu
 runs all its logic in a *local frame of reference*, offset from global coordinates.
 This affects physics, rendering, raycasts, and entity/entity collision tests.
 
@@ -83,7 +83,7 @@ console.log(pos)      // approx. [1.1, 2.1, 3.1]
 
 ## Using local coord APIs
 
-In general, all position related APIs in `noa` have a counterpart that 
+In general, all position related APIs in Cudu have a counterpart that 
 works in local coordinates, prefixed with `_local`. 
 These are generally for internal use, but it's safe to use them 
 whenever you need high precision, or you need to 

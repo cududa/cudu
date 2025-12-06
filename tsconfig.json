@@ -46,7 +46,7 @@
             "typedoc-plugin-missing-exports",
         ],
         "entryPointStrategy": "expand",
-        "name": "noa API reference",
+        "name": "Cudu API reference",
         "out": "docs/API",
         "readme": "docs/api-header.md",
         "excludeInternal": true, // excludes stuff tagged @internal

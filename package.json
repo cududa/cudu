@@ -1,8 +1,8 @@
 {
-    "name": "noa-engine",
+    "name": "cudu",
     "version": "0.35.0",
     "type": "module",
-    "description": "Experimental voxel game engine",
+    "description": "High-performance voxel game engine for the browser",
     "main": "dist/noa.cjs.js",
     "module": "dist/noa.esm.js",
     "types": "dist/src/index.d.ts",
@@ -32,10 +32,10 @@
     "license": "MIT",
     "repository": {
         "type": "git",
-        "url": "https://github.com/fenomas/noa.git"
+        "url": "https://github.com/cullendudas/cudu.git"
     },
     "bugs": {
-        "url": "https://github.com/fenomas/noa/issues"
+        "url": "https://github.com/cullendudas/cudu/issues"
     },
     "dependencies": {
         "aabb-3d": "fenomas/aabb-3d",
@@ -71,6 +71,9 @@
         "voxels",
         "game",
         "engine",
-        "game-engine"
+        "game-engine",
+        "cudu",
+        "babylonjs",
+        "webgl"
     ]
 }

@@ -1,7 +1,14 @@
 
 ## Version history
 
-This is a summary of new features and breaking changes in recent `noa` versions.
+This is a summary of new features and breaking changes.
+
+### Cudu versions (fork of noa-engine)
+
+ * [0.35.0](#0350---cudu)
+ * [0.34.0](#0340---cudu)
+
+### Original noa-engine versions
 
  * [0.33.0](#0330)
  * [0.32.0](#0320)
@@ -21,6 +28,31 @@ This is a summary of new features and breaking changes in recent `noa` versions.
 
 
 ----
+
+## Cudu Versions
+
+### 0.35.0 - Cudu
+
+   * Performance: Cached Vector3 for origin rebasing reduces GC pressure
+   * Mesh data structure fallback for improved compatibility
+   * Auto-configure chunk distances from baked world bounds via `world.setAddRemoveDistanceFromBakedWorld()`
+   * Block scale support for configurable voxel sizes
+
+### 0.34.0 - Cudu
+
+   * **World Baking System**: Pre-bake procedurally generated worlds to `.noaworld` binary format
+     * `WorldBaker` class for development-time baking
+     * `BakedWorldLoader` for production loading with LRU caching
+     * Enables tree-shaking of procedural generation code
+   * **Async Chunk Generation**: `world.registerChunkGenerator()` supports Promise-based generation with `AbortController` cancellation
+   * **ES Module Tree-shaking**: Granular `@babylonjs/core` imports for smaller production bundles
+   * **Scene Readiness**: `rendering.sceneReady` Promise tracks shader compilation before scene is ready
+   * **Memory Management**: Comprehensive `dispose()` methods on all major subsystems (rendering, world, entities, physics, container)
+   * Vite + HMR compatibility improvements
+
+----
+
+## Original noa-engine Versions
 
 ### 0.33.0
 

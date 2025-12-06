@@ -1,6 +1,6 @@
 
 
-This is the API documentation for noa, a voxel game engine.
+This is the API documentation for Cudu, a voxel game engine built on [noa-engine](https://github.com/fenomas/noa) by [@fenomas](https://github.com/fenomas).
 
 You probably want to start with the core engine class:
 
@@ -8,4 +8,4 @@ You probably want to start with the core engine class:
 
 Or return to the source repo:
 
-> [github.com/fenomas/noa](https://github.com/fenomas/noa)
+> [github.com/cullendudas/cudu](https://github.com/cullendudas/cudu)
