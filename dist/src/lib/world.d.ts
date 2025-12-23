@@ -89,6 +89,15 @@ export class World extends EventEmitter {
     _prevSortingFn: any;
     /** @internal */
     _sortMeshQueueEvery: number;
+    /** @internal World bounds in chunk indices - null means infinite world */
+    _worldBounds: {
+        minX: number;
+        maxX: number;
+        minY: number;
+        maxY: number;
+        minZ: number;
+        maxZ: number;
+    };
     /** @internal All chunks existing in any queue */
     _chunksKnown: LocationQueue;
     /** @internal in range but not yet requested from client */
@@ -195,6 +204,25 @@ export class World extends EventEmitter {
      * @param {number | number[]} remDist
      */
     setAddRemoveDistance(addDist?: number | number[], remDist?: number | number[]): void;
+    /**
+     * Set finite world bounds in chunk indices. Chunks outside these bounds will not be
+     * loaded or generated, creating a bounded world. Set to null to return to infinite world.
+     *
+     * @param {number} minX - Minimum chunk X index (inclusive)
+     * @param {number} maxX - Maximum chunk X index (inclusive)
+     * @param {number} minY - Minimum chunk Y index (inclusive)
+     * @param {number} maxY - Maximum chunk Y index (inclusive)
+     * @param {number} minZ - Minimum chunk Z index (inclusive)
+     * @param {number} maxZ - Maximum chunk Z index (inclusive)
+     * @example
+     * ```js
+     * // Set world bounds to a 10x5x10 chunk region centered at origin
+     * noa.world.setWorldBounds(-5, 4, -2, 2, -5, 4)
+     * // Clear bounds for infinite world
+     * noa.world.setWorldBounds(null)
+     * ```
+     */
+    setWorldBounds(minX: number, maxX: number, minY: number, maxY: number, minZ: number, maxZ: number): void;
     /**
      * Automatically configure chunk load/unload distances based on a baked world's bounds
      * and the player's spawn position. This ensures all chunks within the baked area

@@ -12089,6 +12089,9 @@ class World extends EventEmitter {
         /** @internal */
         this._sortMeshQueueEvery = 0;
 
+        /** @internal World bounds in chunk indices - null means infinite world */
+        this._worldBounds = null;
+
 
         // Init internal chunk queues:
 
@@ -12328,6 +12331,38 @@ World.prototype.setAddRemoveDistance = function (addDist = 2, remDist = 3) {
 
 
 /**
+ * Set finite world bounds in chunk indices. Chunks outside these bounds will not be
+ * loaded or generated, creating a bounded world. Set to null to return to infinite world.
+ *
+ * @param {number} minX - Minimum chunk X index (inclusive)
+ * @param {number} maxX - Maximum chunk X index (inclusive)
+ * @param {number} minY - Minimum chunk Y index (inclusive)
+ * @param {number} maxY - Maximum chunk Y index (inclusive)
+ * @param {number} minZ - Minimum chunk Z index (inclusive)
+ * @param {number} maxZ - Maximum chunk Z index (inclusive)
+ * @example
+ * ```js
+ * // Set world bounds to a 10x5x10 chunk region centered at origin
+ * noa.world.setWorldBounds(-5, 4, -2, 2, -5, 4)
+ * // Clear bounds for infinite world
+ * noa.world.setWorldBounds(null)
+ * ```
+ */
+World.prototype.setWorldBounds = function (minX, maxX, minY, maxY, minZ, maxZ) {
+    if (minX === null || minX === undefined) {
+        this._worldBounds = null;
+        console.log('[noa] World bounds cleared - infinite world enabled');
+        return
+    }
+    this._worldBounds = { minX, maxX, minY, maxY, minZ, maxZ };
+    console.log('[noa] World bounds set: ' +
+        'X=[' + minX + ',' + maxX + '], ' +
+        'Y=[' + minY + ',' + maxY + '], ' +
+        'Z=[' + minZ + ',' + maxZ + ']');
+};
+
+
+/**
  * Automatically configure chunk load/unload distances based on a baked world's bounds
  * and the player's spawn position. This ensures all chunks within the baked area
  * are loadable from the spawn point, avoiding procedural generation overhead
@@ -12383,8 +12418,11 @@ World.prototype.setAddRemoveDistanceFromBakedWorld = function (loader, spawnPosi
     var distToMinY = Math.abs(spawnChunkY - bounds.minY);
     var distToMaxY = Math.abs(spawnChunkY - bounds.maxY);
 
-    // Take the maximum distance in each dimension to ensure full coverage
-    var maxHoriz = Math.max(distToMinX, distToMaxX, distToMinZ, distToMaxZ);
+    // Calculate diagonal distance to corners (spherical loading needs radius to cover rectangular bounds)
+    // Using sqrt(maxX² + maxZ²) ensures the loading sphere encompasses all corners of the world
+    var maxDistX = Math.max(distToMinX, distToMaxX);
+    var maxDistZ = Math.max(distToMinZ, distToMaxZ);
+    var maxHoriz = Math.ceil(Math.sqrt(maxDistX * maxDistX + maxDistZ * maxDistZ));
     var maxVert = Math.max(distToMinY, distToMaxY);
 
     // Add buffer for smoother chunk loading when player moves around
@@ -12685,6 +12723,13 @@ var checkReflectedLocations = (world, ci, cj, ck, i, j, k) => {
 // finally, the logic for each reflected location checked
 var checkOneLocation = (world, i, j, k) => {
     if (world._chunksKnown.includes(i, j, k)) return
+    // Check world bounds - skip chunks outside finite world
+    var bounds = world._worldBounds;
+    if (bounds) {
+        if (i < bounds.minX || i > bounds.maxX ||
+            j < bounds.minY || j > bounds.maxY ||
+            k < bounds.minZ || k > bounds.maxZ) return
+    }
     world._chunksKnown.add(i, j, k);
     world._chunksToRequest.add(i, j, k, true);
 };
@@ -12893,7 +12938,6 @@ function possiblyQueueChunkForMeshing(world, chunk) {
 */
 function requestNewChunk(world, i, j, k) {
     var size = world._chunkSize;
-    var dataArr = Chunk._createVoxelArray(world._chunkSize);
     var worldName = world.noa.worldName;
     var requestID = [i, j, k, worldName].join('|');
     var x = i * size;
@@ -12902,9 +12946,12 @@ function requestNewChunk(world, i, j, k) {
     world._chunksPending.add(i, j, k);
 
     // If async generator is registered, use it instead of events
+    // Async generators provide their own voxelData, so we don't pre-allocate
     if (world._asyncChunkGenerator) {
-        requestNewChunkAsync(world, requestID, dataArr, x, y, z, i, j, k, worldName);
+        requestNewChunkAsync(world, requestID, x, y, z, worldName);
     } else {
+        // Event-based API needs pre-allocated array for client to fill
+        var dataArr = Chunk._createVoxelArray(world._chunkSize);
         world.emit('worldDataNeeded', requestID, dataArr, x, y, z, worldName);
     }
     profile_queues_hook('request');
@@ -12915,7 +12962,7 @@ function requestNewChunk(world, i, j, k) {
  * Handle async chunk generation
  * @param {World} world
  */
-function requestNewChunkAsync(world, requestID, dataArr, x, y, z, i, j, k, worldName) {
+function requestNewChunkAsync(world, requestID, x, y, z, worldName) {
     // Create abort controller for this request
     var abortController = new AbortController();
     world._asyncChunkAbortControllers.set(requestID, abortController);
@@ -12933,9 +12980,10 @@ function requestNewChunkAsync(world, requestID, dataArr, x, y, z, i, j, k, world
             if (abortController.signal.aborted) return
             if (worldName !== world.noa.worldName) return
 
-            // Handle null result (empty chunk)
+            // Handle null result (empty chunk) - create empty array on demand
             if (result === null) {
-                setChunkData(world, requestID, dataArr, null, 0);
+                var emptyArr = Chunk._createVoxelArray(world._chunkSize);
+                setChunkData(world, requestID, emptyArr, null, 0);
                 return
             }
 
@@ -12944,8 +12992,9 @@ function requestNewChunkAsync(world, requestID, dataArr, x, y, z, i, j, k, world
             if (voxelData) {
                 setChunkData(world, requestID, voxelData, userData || null, fillVoxelID ?? -1);
             } else {
-                // No voxel data provided, treat as empty
-                setChunkData(world, requestID, dataArr, userData || null, 0);
+                // No voxel data provided, treat as empty - create array on demand
+                var fallbackArr = Chunk._createVoxelArray(world._chunkSize);
+                setChunkData(world, requestID, fallbackArr, userData || null, 0);
             }
         })
         .catch(err => {
@@ -12960,7 +13009,8 @@ function requestNewChunkAsync(world, requestID, dataArr, x, y, z, i, j, k, world
 
             console.error(`[noa] Async chunk generation failed for ${requestID}:`, err);
             // On error, create empty chunk as fallback to prevent permanent holes
-            setChunkData(world, requestID, dataArr, null, 0);
+            var errorArr = Chunk._createVoxelArray(world._chunkSize);
+            setChunkData(world, requestID, errorArr, null, 0);
         });
 
     world._asyncChunkPromises.set(requestID, promise);
